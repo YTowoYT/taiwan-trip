@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 暑假環島互動行程表 V5</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Noto Sans TC', sans-serif; background-color: #93c5fd; overflow: hidden; }
+        .app-container { display: flex; height: 100vh; position: relative; width: 100vw; flex-direction: row; }
+
+        /* 左側地圖區 */
+        .map-area { flex-grow: 1; position: relative; height: 100%; }
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background-color: #bfdbfe; }
+        .map-error { display: flex; align-items: center; justify-content: center; height: 100%; color: #1e3a8a; font-weight: bold; font-size: 16px; flex-direction: column; gap: 10px; text-align: center; padding: 20px; }
+
+        /* 隱藏 OSRM 預設的文字導航指示器，保持畫面乾淨 */
+        .leaflet-routing-container { display: none !important; }
+
+        /* 頂部導航丸子 */
+        .top-nav { position: absolute; top: 20px; left: 20px; display: flex; gap: 8px; z-index: 1000; flex-wrap: wrap; }
+        .nav-pill { background: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; color: #1e293b; }
+        .nav-pill.active { background: #111827; color: white; }
+
+        /* 右側面板區 */
+        .side-panel { width: 380px; background: white; height: calc(100vh - 40px); margin: 20px 20px 20px 0; border-radius: 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; z-index: 10; flex-shrink: 0; }
+        .panel-content { padding: 24px; overflow-y: auto; flex-grow: 1; }
+
+        /* 面板標題區 */
+        .day-label { font-size: 12px; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .route-title { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 12px 0; }
+        .route-desc { font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 20px; }
+
+        /* 景點卡片 */
+        .time-section { margin-bottom: 24px; }
+        .time-label { font-size: 16px; font-weight: 500; color: #111827; margin-bottom: 12px; }
+        
+        .place-group { display: flex; flex-direction: column; }
+        .place-card { display: flex; gap: 12px; align-items: flex-start; z-index: 2; position: relative; }
+        .place-img-wrapper { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+        .place-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; background: #e5e7eb; }
+        
+        .place-info { display: flex; flex-direction: column; justify-content: flex-start; flex-grow: 1; }
+        .place-time { font-size: 12px; color: #111827; margin-bottom: 2px; }
+        
+        /* 點擊地名連結的樣式 */
+        .place-name-link { text-decoration: none; color: inherit; display: inline-block; margin: 0 0 4px 0; }
+        .place-name { font-size: 15px; font-weight: 700; color: #111827; margin: 0; transition: color 0.2s; display: flex; align-items: center; gap: 6px; }
+        .place-name-link:hover .place-name { color: #3b82f6; }
+        .map-icon { font-size: 12px; color: #3b82f6; }
+        
+        .place-rating { font-size: 11px; color: #475569; margin-bottom: 4px; }
+        .place-desc { font-size: 11px; color: #6b7280; }
+
+        /* 車程虛線設計 */
+        .drive-time-line { margin: 4px 0 4px 30px; padding-left: 50px; border-left: 2px dashed #cbd5e1; height: 35px; display: flex; align-items: center; font-size: 11px; color: #64748b; font-weight: 500; }
+        .drive-time-line i { margin-right: 6px; color: #94a3b8; }
+
+        /* 手機版 (RWD) */
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .map-area { height: 45vh; width: 100%; flex-shrink: 0; }
+            .side-panel { width: 100%; height: 55vh; margin: 0; border-radius: 20px 20px 0 0; margin-top: -15px; }
+            .panel-content { padding: 20px 16px; }
+            .top-nav { top: 10px; left: 10px; right: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="map-area">
+        <div id="map"></div>
+        <div class="top-nav" id="navContainer"></div>
+    </div>
+    <div class="side-panel">
+        <div class="panel-content fade-in" id="panelContent"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+<script>
+    // 資料庫：加入了 driveTime（前一地點到此地點的車程）並修正 Day 1 順序
+    const itineraryData = {
+        1: { 
+            title: "台北 ➔ 花蓮 ➔ 池上", 
+            desc: "從台北松山出發，沿蘇花公路南下花蓮，最終抵達池上。", 
+            sections: [ 
+                { 
+                    label: "Morning", 
+                    places: [ 
+                        { time: "05:00", name: "台北松山車站", rating: "4.3 ★", desc: "出發走國5接蘇花", img: "https://placehold.co/100x100/bfdbfe/1d4ed8?text=Train", lat: 25.0498, lng: 121.5781 }, 
+                        { driveTime: "約 2.5 小時", time: "08:30", name: "台泥DAKA園區", rating: "4.2 ★", desc: "中途休憩，廁所補給", img: "https://placehold.co/100x100/d9f99d/4d7c0f?text=DAKA", lat: 24.3090, lng: 121.7538 },
+                        { driveTime: "約 1.5 小時", time: "10:30", name: "光榮博物館", rating: "4.5 ★", desc: "免費入場參觀", img: "https://placehold.co/100x100/fef08a/a16207?text=Museum", lat: 23.9782, lng: 121.6025 } 
+                    ] 
+                }, 
+                { 
+                    label: "Afternoon", 
+                    places: [ 
+                        { driveTime: "約 50 分鐘", time: "14:00", name: "富興小火車", rating: "4.6 ★", desc: "需電話確認營運", img: "https://placehold.co/100x100/fbcfe8/be185d?text=Train", lat: 23.6300, lng: 121.4320 }, 
+                        { driveTime: "約 1.5 小時", time: "17:30", name: "悟饕池上飯包文化故事館", rating: "4.1 ★", desc: "享用經典晚餐", img: "https://placehold.co/100x100/fed7aa/c2410c?text=Bento", lat: 23.1235, lng: 121.1965 } 
+                    ] 
+                } 
+            ] 
+        },
+        2: { 
+            title: "池上 ➔ 台東", 
+            desc: "迎接曙光與熱氣球，探索自然生態。", 
+            sections: [ 
+                { 
+                    label: "Morning", 
+                    places: [ 
+                        { time: "05:30", name: "鹿野高台", rating: "4.6 ★", desc: "熱氣球繫留", img: "https://placehold.co/100x100/fecaca/b91c1c?text=Balloon", lat: 22.9130, lng: 121.1205 }, 
+                        { driveTime: "約 20 分鐘", time: "10:00", name: "初鹿牧場", rating: "4.2 ★", desc: "親近自然", img: "https://placehold.co/100x100/bbf7d0/15803d?text=Farm", lat: 22.8468, lng: 121.0883 } 
+                    ] 
+                }, 
+                { 
+                    label: "Afternoon", 
+                    places: [ 
+                        { driveTime: "約 30 分鐘", time: "14:00", name: "國立臺灣史前文化博物館", rating: "4.5 ★", desc: "深入歷史", img: "https://placehold.co/100x100/e9d5ff/7e22ce?text=History", lat: 22.7600, lng: 121.0930 }, 
+                        { driveTime: "約 40 分鐘", time: "16:30", name: "太麻里平交道", rating: "4.3 ★", desc: "台版櫻木花道", img: "https://placehold.co/100x100/bae6fd/0369a1?text=Crossing", lat: 22.6186, lng: 121.0028 } 
+                    ] 
+                } 
+            ] 
+        },
+        3: { 
+            title: "台東 ➔ 高雄", 
+            desc: "沿南迴公路飽覽海景，品嚐東港海鮮。", 
+            sections: [ 
+                { 
+                    label: "Morning", 
+                    places: [ 
+                        { time: "09:00", name: "多良車站", rating: "4.4 ★", desc: "全台最美車站", img: "https://placehold.co/100x100/99f6e4/0f766e?text=Ocean", lat: 22.5085, lng: 120.9592 }, 
+                        { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "東港午餐", img: "https://placehold.co/100x100/fecdd3/be123c?text=Seafood", lat: 22.4660, lng: 120.4440 } 
+                    ] 
+                }, 
+                { 
+                    label: "Afternoon", 
+                    places: [ 
+                        { driveTime: "約 1 小時", time: "14:30", name: "壽山動物園", rating: "4.4 ★", desc: "漫步動物園", img: "https://placehold.co/100x100/fde047/854d0e?text=Zoo", lat: 22.6395, lng: 120.2760 }, 
+                        { driveTime: "約 20 分鐘", time: "17:00", name: "龍虎塔", rating: "4.3 ★", desc: "蓮池潭地標", img: "https://placehold.co/100x100/c7d2fe/4338ca?text=Tower", lat: 22.6800, lng: 120.2910 }, 
+                        { driveTime: "約 10 分鐘", time: "18:30", name: "劉家酸菜白肉鍋", rating: "4.1 ★", desc: "左營名店", img: "https://placehold.co/100x100/fed7aa/c2410c?text=Hotpot", lat: 22.6865, lng: 120.2925 } 
+                    ] 
+                } 
+            ] 
+        },
+        4: { 
+            title: "高雄 ➔ 台南", 
+            desc: "港都美食出發，進入文化古都台南。", 
+            sections: [ 
+                { 
+                    label: "Morning", 
+                    places: [ 
+                        { time: "11:30", name: "蒸鮮腸粉", rating: "4.3 ★", desc: "高雄中餐", img: "https://placehold.co/100x100/fef08a/a16207?text=Dimsum", lat: 22.6450, lng: 120.3020 } 
+                    ] 
+                }, 
+                { 
+                    label: "Afternoon", 
+                    places: [ 
+                        { driveTime: "約 50 分鐘", time: "14:00", name: "奇美博物館", rating: "4.8 ★", desc: "建議網路訂票", img: "https://placehold.co/100x100/e2e8f0/475569?text=Museum", lat: 22.9345, lng: 120.2260 }, 
+                        { driveTime: "約 25 分鐘", time: "16:00", name: "安平古堡", rating: "4.4 ★", desc: "品嚐在地小吃", img: "https://placehold.co/100x100/fdba74/c2410c?text=Old+Street", lat: 23.0016, lng: 120.1606 }, 
+                        { driveTime: "約 15 分鐘", time: "17:30", name: "漁光島", rating: "4.5 ★", desc: "絕美海岸夕陽", img: "https://placehold.co/100x100/fbcfe8/be185d?text=Sunset", lat: 22.9800, lng: 120.1550 } 
+                    ] 
+                } 
+            ] 
+        },
+        5: { 
+            title: "台南 ➔ 嘉義 ➔ 台中", 
+            desc: "沿途選購紀念品，祈求平安財運。", 
+            sections: [ 
+                { 
+                    label: "Morning", 
+                    places: [ 
+                        { time: "09:30", name: "KHTOY絨毛玩偶旗艦館", rating: "4.8 ★", desc: "嘉義民雄", img: "https://placehold.co/100x100/fecdd3/be123c?text=KHTOY", lat: 23.5350, lng: 120.4350 } 
+                    ] 
+                }, 
+                { 
+                    label: "Afternoon", 
+                    places: [ 
+                        { driveTime: "約 50 分鐘", time: "12:30", name: "竹山紫南宮", rating: "4.7 ★", desc: "求財運與平安", img: "https://placehold.co/100x100/fef08a/a16207?text=Temple", lat: 23.7788, lng: 120.7303 }, 
+                        { driveTime: "約 1 小時", time: "17:00", name: "激旨燒肉 台中總店", rating: "4.5 ★", desc: "台中總店晚餐", img: "https://placehold.co/100x100/fed7aa/c2410c?text=BBQ", lat: 24.1790, lng: 120.6450 } 
+                    ] 
+                } 
+            ] 
+        }
+    };
+
+    const navContainer = document.getElementById('navContainer');
+    const panelContent = document.getElementById('panelContent');
+    let map = null; 
+    let currentLayerGroup = null;
+    let routingControl = null; // 獨立控制路線引擎
+
+    try {
+        if (typeof L !== 'undefined') {
+            map = L.map('map', { zoomControl: false }).setView([23.5, 121], 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            currentLayerGroup = L.featureGroup().addTo(map);
+        } else {
+            document.getElementById('map').innerHTML = '<div class="map-error">請在 Safari 或 Chrome 開啟以顯示完整地圖</div>';
+        }
+    } catch (e) { console.error("地圖載入失敗"); }
+
+    function initNav() {
+        for (let i = 1; i <= 5; i++) {
+            const btn = document.createElement('div');
+            btn.className = `nav-pill ${i === 1 ? 'active' : ''}`;
+            btn.innerText = `Day ${i}`;
+            btn.onclick = () => {
+                document.querySelectorAll('.nav-pill').forEach(el => el.classList.remove('active'));
+                btn.classList.add('active');
+                renderDay(i);
+            };
+            navContainer.appendChild(btn);
+        }
+    }
+
+    function renderDay(dayNumber) {
+        const data = itineraryData[dayNumber];
+        let htmlContent = `<div class="day-label">DAY ${dayNumber}</div><h1 class="route-title">${data.title}</h1><p class="route-desc">${data.desc}</p>`;
+        const coordinates = [];
+
+        data.sections.forEach(section => {
+            htmlContent += `<div class="time-section"><div class="time-label">${section.label}</div>`;
+            section.places.forEach(place => {
+                // 如果有設定車程時間，就渲染虛線區塊
+                if (place.driveTime) {
+                    htmlContent += `<div class="drive-time-line"><i class="fa-solid fa-car-side"></i> ${place.driveTime}</div>`;
+                }
+
+                // 將景點名稱包裝成 Google Maps 搜尋連結
+                const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}`;
+
+                htmlContent += `
+                    <div class="place-group">
+                        <div class="place-card">
+                            <div class="place-img-wrapper"><img class="place-img" src="${place.img}" alt="${place.name}"></div>
+                            <div class="place-info">
+                                <div class="place-time">${place.time}</div>
+                                <a href="${googleMapsLink}" target="_blank" class="place-name-link">
+                                    <h3 class="place-name">${place.name} <i class="fa-solid fa-location-arrow map-icon"></i></h3>
+                                </a>
+                                <div class="place-rating">${place.rating}</div>
+                                <div class="place-desc">${place.desc}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                coordinates.push([place.lat, place.lng]);
+            });
+            htmlContent += `</div>`;
+        });
+        panelContent.innerHTML = htmlContent;
+
+        // 地圖重繪邏輯 (包含修復路線消失的 Bug)
+        if (map && currentLayerGroup) {
+            currentLayerGroup.clearLayers(); // 清除舊圖標
+            
+            // 如果舊的導航路線存在，將其移除
+            if (routingControl) {
+                map.removeControl(routingControl);
+                routingControl = null;
+            }
+
+            // 新增真實道路導航線
+            if (coordinates.length > 1) {
+                const waypoints = coordinates.map(c => L.latLng(c[0], c[1]));
+                routingControl = L.Routing.control({
+                    waypoints: waypoints,
+                    createMarker: function() { return null; }, // 不使用 OSRM 的預設圖標，我們自訂
+                    addWaypoints: false, // 關閉使用者在地圖上拖拉新增路徑點
+                    routeWhileDragging: false,
+                    show: false, // 隱藏步驟面板
+                    lineOptions: {
+                        styles: [{color: '#3b82f6', opacity: 0.8, weight: 5}]
+                    }
+                }).addTo(map);
+            }
+
+            // 加入自訂數字圖標
+            let indexCount = 1;
+            data.sections.forEach((section) => {
+                section.places.forEach((place) => {
+                    const customIcon = L.divIcon({ 
+                        className: 'custom-div-icon', 
+                        html: `<div style="background-color:#111827; color:white; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:11px; border:2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${indexCount}</div>`, 
+                        iconSize: [22, 22] 
+                    });
+                    L.marker([place.lat, place.lng], {icon: customIcon}).bindPopup(`<b>${place.name}</b>`).addTo(currentLayerGroup);
+                    indexCount++;
+                });
+            });
+
+            // 自動縮放視角
+            if (coordinates.length > 0) {
+                // 使用稍微延遲確保路徑畫完後再縮放，避免破圖
+                setTimeout(() => {
+                    map.fitBounds(L.latLngBounds(coordinates), { padding: [40, 40] });
+                }, 200);
+            }
+        }
+    }
+
+    initNav(); 
+    renderDay(1); 
+</script>
+</body>
+</html>
