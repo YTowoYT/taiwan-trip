@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>2026 暑假環島互動行程表 V8.3</title>
+    <title>2026 暑假環島互動行程表 V8.4</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <style>
-        /* 使用 dvh 解決手機鍵盤彈出造成的視窗高度問題 */
         body, html { margin: 0; padding: 0; height: 100vh; height: 100dvh; font-family: 'Noto Sans TC', sans-serif; background-color: #93c5fd; overflow: hidden; }
         .app-container { display: flex; height: 100%; position: relative; width: 100vw; flex-direction: row; }
         
@@ -27,13 +26,11 @@
         
         .side-panel { width: 380px; background: white; height: calc(100% - 40px); margin: 20px 20px 20px 0; border-radius: 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; overflow: hidden; }
         
-        /* 拖拉觸控區 (電腦版預設隱藏) */
         .drag-handle-area { display: none; width: 100%; height: 24px; background: white; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; z-index: 20; }
         .drag-handle { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
         
         .panel-content { padding: 0 24px 24px 24px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; }
         
-        /* 行程樣式 */
         .day-label { font-size: 12px; color: #475569; margin-bottom: 8px; display: flex; align-items: center; margin-top: 10px; }
         .day-date { font-weight: 700; color: #3b82f6; margin-left: 8px; font-size: 13px; background: #eff6ff; padding: 2px 8px; border-radius: 12px; }
         .route-title { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 12px 0; }
@@ -45,15 +42,21 @@
         .place-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; background: #e5e7eb; }
         .place-info { flex-grow: 1; }
         .place-time { font-size: 12px; color: #111827; margin-bottom: 2px; }
-        .place-name { font-size: 15px; font-weight: 700; color: #111827; margin: 0; display: flex; align-items: center; gap: 4px; }
+        
+        /* 修正：把 Google Maps 連結的樣式加回來 */
+        .place-name-link { text-decoration: none; color: inherit; display: inline-block; margin: 0 0 4px 0; transition: 0.2s; }
+        .place-name { font-size: 15px; font-weight: 700; color: #111827; margin: 0; display: flex; align-items: center; gap: 6px; }
+        .place-name-link:hover .place-name { color: #3b82f6; }
+        .map-icon { font-size: 12px; color: #3b82f6; }
+
         .place-rating { font-size: 11px; color: #475569; }
-        .place-desc { font-size: 11px; color: #6b7280; }
+        .place-desc { font-size: 11px; color: #6b7280; margin-top: 2px; }
         .drive-time-line { margin: -8px 0 12px 30px; padding-left: 50px; border-left: 2px dashed #cbd5e1; height: 30px; display: flex; align-items: center; font-size: 11px; color: #64748b; }
+        
         .notes-list { list-style: none; padding: 0; }
         .notes-list li { background: #f8fafc; margin-bottom: 12px; padding: 16px; border-radius: 12px; border-left: 4px solid #facc15; font-size: 14px; line-height: 1.6; color: #334155; }
         .notes-list li strong { color: #1e293b; display: block; margin-bottom: 4px; }
         
-        /* 留言板樣式 */
         .chat-container { display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; }
         .chat-messages { flex-grow: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 4px; }
         .msg-bubble { background: #f1f5f9; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; position: relative; }
@@ -70,30 +73,14 @@
         #msgInput { flex-grow: 1; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 20px; font-size: 14px; outline: none; }
         #sendBtn { background: #3b82f6; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; transition: 0.2s; }
         
-        /* 手機版完美優化 */
         @media (max-width: 768px) { 
             .app-container { flex-direction: column; } 
             .map-area { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 1; }
             .top-nav { z-index: 5; }
-            
-            /* 變成底部抽屜 */
-            .side-panel { 
-                position: absolute; 
-                bottom: 0; 
-                width: 100%; 
-                height: 50dvh; /* 最高 50% 畫面 */
-                margin: 0; 
-                border-radius: 20px 20px 0 0; 
-                z-index: 1000; 
-                transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 平滑滑動動畫 */
-            }
-            .drag-handle-area { display: flex; } /* 顯示拖拉把手 */
+            .side-panel { position: absolute; bottom: 0; width: 100%; height: 50dvh; margin: 0; border-radius: 20px 20px 0 0; z-index: 1000; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+            .drag-handle-area { display: flex; } 
             .panel-content { padding-top: 0; }
-            
-            /* 縮小狀態 */
-            .side-panel.collapsed {
-                transform: translateY(calc(100% - 30px)); /* 只留 30px 在畫面上 */
-            }
+            .side-panel.collapsed { transform: translateY(calc(100% - 30px)); }
         }
     </style>
 </head>
@@ -103,11 +90,8 @@
         <div id="map"></div>
         <div class="top-nav" id="navContainer"></div>
     </div>
-    
     <div class="side-panel" id="sidePanel">
-        <div class="drag-handle-area" id="dragHandle">
-            <div class="drag-handle"></div>
-        </div>
+        <div class="drag-handle-area" id="dragHandle"><div class="drag-handle"></div></div>
         <div class="panel-content" id="panelContent"></div>
     </div>
 </div>
@@ -159,27 +143,18 @@
     let currentLayerGroup = L.featureGroup().addTo(map);
     let routingControl = null;
 
-    // --- 新增：面板拖拉與收合邏輯 ---
     const sidePanel = document.getElementById('sidePanel');
     const dragHandle = document.getElementById('dragHandle');
     let startY = 0;
 
-    dragHandle.addEventListener('touchstart', e => {
-        startY = e.touches[0].clientY;
-    }, {passive: true});
-
+    dragHandle.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, {passive: true});
     dragHandle.addEventListener('touchend', e => {
         let endY = e.changedTouches[0].clientY;
-        if (endY - startY > 20) { // 往下滑動 -> 縮小
-            sidePanel.classList.add('collapsed');
-        } else if (startY - endY > 20) { // 往上滑動 -> 展開
-            sidePanel.classList.remove('collapsed');
-        } else { // 單純點擊 -> 切換狀態
-            sidePanel.classList.toggle('collapsed');
-        }
+        if (endY - startY > 20) { sidePanel.classList.add('collapsed'); } 
+        else if (startY - endY > 20) { sidePanel.classList.remove('collapsed'); } 
+        else { sidePanel.classList.toggle('collapsed'); }
     });
 
-    // --- 新增：點擊地圖時強制關閉鍵盤 ---
     document.getElementById('mapArea').addEventListener('touchstart', () => {
         document.querySelectorAll('input').forEach(input => input.blur());
     }, {passive: true});
@@ -208,7 +183,7 @@
     function setActive(el) { 
         document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active')); 
         el.classList.add('active'); 
-        sidePanel.classList.remove('collapsed'); // 點擊按鈕時自動展開面板
+        sidePanel.classList.remove('collapsed'); 
     }
     
     function clearMap() { currentLayerGroup.clearLayers(); if (routingControl) map.removeControl(routingControl); }
@@ -221,7 +196,22 @@
             html += `<div class="time-section"><div class="time-label">${sec.label}</div>`;
             sec.places.forEach(p => {
                 if (p.driveTime) html += `<div class="drive-time-line"><i class="fa-solid fa-car-side"></i> ${p.driveTime}</div>`;
-                html += `<div class="place-card"><div class="place-img-wrapper"><img class="place-img" src="${p.img}"></div><div class="place-info"><div class="place-time">${p.time}</div><h3 class="place-name">${p.name}</h3><div class="place-rating">${p.rating}</div><div class="place-desc">${p.desc}</div></div></div>`;
+                
+                // 修正：補回 Google Maps 的專屬官方搜尋連結
+                const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}`;
+                
+                html += `
+                    <div class="place-card">
+                        <div class="place-img-wrapper"><img class="place-img" src="${p.img}"></div>
+                        <div class="place-info">
+                            <div class="place-time">${p.time}</div>
+                            <a href="${mapLink}" target="_blank" class="place-name-link">
+                                <h3 class="place-name">${p.name} <i class="fa-solid fa-location-arrow map-icon"></i></h3>
+                            </a>
+                            <div class="place-rating">${p.rating}</div>
+                            <div class="place-desc">${p.desc}</div>
+                        </div>
+                    </div>`;
                 coords.push([p.lat, p.lng]);
             });
             html += `</div>`;
@@ -319,7 +309,6 @@
                 }
                 push(ref(db, 'messages'), { user: name, text: text, timestamp: serverTimestamp() }); 
                 document.getElementById('msgInput').value = ''; 
-                // 傳送後保持輸入框焦點 (可選)
                 document.getElementById('msgInput').focus();
             }
         };
