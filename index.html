@@ -2,29 +2,39 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 暑假環島互動行程表 V8.2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>2026 暑假環島互動行程表 V8.3</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Noto Sans TC', sans-serif; background-color: #93c5fd; overflow: hidden; }
-        .app-container { display: flex; height: 100vh; position: relative; width: 100vw; flex-direction: row; }
+        /* 使用 dvh 解決手機鍵盤彈出造成的視窗高度問題 */
+        body, html { margin: 0; padding: 0; height: 100vh; height: 100dvh; font-family: 'Noto Sans TC', sans-serif; background-color: #93c5fd; overflow: hidden; }
+        .app-container { display: flex; height: 100%; position: relative; width: 100vw; flex-direction: row; }
+        
         .map-area { flex-grow: 1; position: relative; height: 100%; }
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background-color: #bfdbfe; }
         .leaflet-routing-container { display: none !important; }
-        .top-nav { position: absolute; top: 20px; left: 20px; display: flex; gap: 8px; z-index: 1000; flex-wrap: wrap; }
+        
+        .top-nav { position: absolute; top: 20px; left: 20px; display: flex; gap: 8px; z-index: 1000; flex-wrap: wrap; padding-right: 20px; }
         .nav-pill { background: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; color: #1e293b; }
         .nav-pill.active { background: #111827; color: white; }
         .nav-pill.notes-btn { background: #fef08a; color: #854d0e; }
         .nav-pill.notes-btn.active { background: #ca8a04; color: white; }
         .nav-pill.chat-btn { background: #dcfce7; color: #166534; }
         .nav-pill.chat-btn.active { background: #22c55e; color: white; }
-        .side-panel { width: 380px; background: white; height: calc(100vh - 40px); margin: 20px 20px 20px 0; border-radius: 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; z-index: 10; flex-shrink: 0; }
-        .panel-content { padding: 24px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; }
         
-        .day-label { font-size: 12px; color: #475569; margin-bottom: 8px; display: flex; align-items: center; }
+        .side-panel { width: 380px; background: white; height: calc(100% - 40px); margin: 20px 20px 20px 0; border-radius: 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; overflow: hidden; }
+        
+        /* 拖拉觸控區 (電腦版預設隱藏) */
+        .drag-handle-area { display: none; width: 100%; height: 24px; background: white; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; z-index: 20; }
+        .drag-handle { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
+        
+        .panel-content { padding: 0 24px 24px 24px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; }
+        
+        /* 行程樣式 */
+        .day-label { font-size: 12px; color: #475569; margin-bottom: 8px; display: flex; align-items: center; margin-top: 10px; }
         .day-date { font-weight: 700; color: #3b82f6; margin-left: 8px; font-size: 13px; background: #eff6ff; padding: 2px 8px; border-radius: 12px; }
         .route-title { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 12px 0; }
         .route-desc { font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 20px; }
@@ -47,30 +57,59 @@
         .chat-container { display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; }
         .chat-messages { flex-grow: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 4px; }
         .msg-bubble { background: #f1f5f9; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; position: relative; }
-        .msg-bubble.has-actions { padding-right: 50px; } /* 只有自己的留言才有右邊距留給按鈕 */
+        .msg-bubble.has-actions { padding-right: 50px; } 
         .msg-user { font-weight: 700; color: #3b82f6; font-size: 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
         .msg-time { font-size: 10px; color: #94a3b8; margin-top: 4px; text-align: right; }
         .msg-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
         .msg-action-btn { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 12px; padding: 2px; transition: 0.2s; }
         .msg-action-btn:hover { color: #64748b; }
         
-        .chat-input-area { display: flex; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 16px; flex-shrink: 0; align-items: center; }
-        
-        /* 名字欄位鎖定時的視覺效果 */
+        .chat-input-area { display: flex; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 16px; padding-bottom: env(safe-area-inset-bottom); flex-shrink: 0; align-items: center; }
         #nameInput { width: 70px; border: 1px solid #cbd5e1; padding: 10px; border-radius: 20px; font-size: 13px; outline: none; transition: 0.3s; text-align: center; }
         #nameInput.locked { background-color: #e2e8f0; color: #475569; border-color: #e2e8f0; cursor: not-allowed; font-weight: bold; }
-        
         #msgInput { flex-grow: 1; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 20px; font-size: 14px; outline: none; }
         #sendBtn { background: #3b82f6; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; transition: 0.2s; }
-        #sendBtn:hover { background: #2563eb; }
-
-        @media (max-width: 768px) { .app-container { flex-direction: column; } .map-area { height: 40vh; } .side-panel { width: 100%; height: 60vh; margin: 0; border-radius: 20px 20px 0 0; } }
+        
+        /* 手機版完美優化 */
+        @media (max-width: 768px) { 
+            .app-container { flex-direction: column; } 
+            .map-area { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 1; }
+            .top-nav { z-index: 5; }
+            
+            /* 變成底部抽屜 */
+            .side-panel { 
+                position: absolute; 
+                bottom: 0; 
+                width: 100%; 
+                height: 50dvh; /* 最高 50% 畫面 */
+                margin: 0; 
+                border-radius: 20px 20px 0 0; 
+                z-index: 1000; 
+                transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 平滑滑動動畫 */
+            }
+            .drag-handle-area { display: flex; } /* 顯示拖拉把手 */
+            .panel-content { padding-top: 0; }
+            
+            /* 縮小狀態 */
+            .side-panel.collapsed {
+                transform: translateY(calc(100% - 30px)); /* 只留 30px 在畫面上 */
+            }
+        }
     </style>
 </head>
 <body>
 <div class="app-container">
-    <div class="map-area"><div id="map"></div><div class="top-nav" id="navContainer"></div></div>
-    <div class="side-panel"><div class="panel-content" id="panelContent"></div></div>
+    <div class="map-area" id="mapArea">
+        <div id="map"></div>
+        <div class="top-nav" id="navContainer"></div>
+    </div>
+    
+    <div class="side-panel" id="sidePanel">
+        <div class="drag-handle-area" id="dragHandle">
+            <div class="drag-handle"></div>
+        </div>
+        <div class="panel-content" id="panelContent"></div>
+    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -92,35 +131,19 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // 取得瀏覽器記憶中的名字
-    function getMyName() {
-        return localStorage.getItem('familyTripName') || '';
-    }
+    function getMyName() { return localStorage.getItem('familyTripName') || ''; }
 
-    // 全域函數：編輯留言 (加入本機名稱檢查)
     window.editMsg = function(msgId, oldText, msgOwner) {
-        if (msgOwner !== getMyName()) {
-            alert("你只能編輯自己的留言喔！");
-            return;
-        }
+        if (msgOwner !== getMyName()) { alert("你只能編輯自己的留言喔！"); return; }
         const newText = prompt("請輸入修改後的訊息：", oldText);
-        if (newText !== null && newText.trim() !== "") {
-            update(ref(db, 'messages/' + msgId), { text: newText.trim() });
-        }
+        if (newText !== null && newText.trim() !== "") { update(ref(db, 'messages/' + msgId), { text: newText.trim() }); }
     };
     
-    // 全域函數：刪除留言 (加入本機名稱檢查)
     window.deleteMsg = function(msgId, msgOwner) {
-        if (msgOwner !== getMyName()) {
-            alert("你只能刪除自己的留言喔！");
-            return;
-        }
-        if (confirm("確定要刪除這則留言嗎？")) {
-            remove(ref(db, 'messages/' + msgId));
-        }
+        if (msgOwner !== getMyName()) { alert("你只能刪除自己的留言喔！"); return; }
+        if (confirm("確定要刪除這則留言嗎？")) { remove(ref(db, 'messages/' + msgId)); }
     };
 
-    // --- 行程資料 ---
     const itineraryData = {
         1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 池上", desc: "第一天啟程！", sections: [ { label: "Morning", places: [ { time: "05:00", name: "台北松山車站", rating: "4.3 ★", desc: "出發走國5接蘇花", img: "https://placehold.co/100x100/bfdbfe/1d4ed8?text=Train", lat: 25.0498, lng: 121.5781 }, { driveTime: "約 2.5 小時", time: "08:30", name: "台泥DAKA園區", rating: "4.2 ★", desc: "休憩補給", img: "https://placehold.co/100x100/d9f99d/4d7c0f?text=DAKA", lat: 24.3090, lng: 121.7538 }, { driveTime: "約 1.5 小時", time: "10:30", name: "光榮博物館", rating: "4.5 ★", desc: "參觀", img: "https://placehold.co/100x100/fef08a/a16207?text=Museum", lat: 23.9782, lng: 121.6025 } ]}, { label: "Afternoon", places: [ { driveTime: "約 50 分鐘", time: "14:00", name: "富興小火車", rating: "4.6 ★", desc: "需確認營運", img: "https://placehold.co/100x100/fbcfe8/be185d?text=Train", lat: 23.6300, lng: 121.4320 }, { driveTime: "約 1.5 小時", time: "17:30", name: "悟饕池上飯包", rating: "4.1 ★", desc: "晚餐", img: "https://placehold.co/100x100/fed7aa/c2410c?text=Bento", lat: 23.1235, lng: 121.1965 } ]} ] },
         2: { date: "2026/07/04 (六)", title: "池上 ➔ 台東", desc: "東台灣自然美景。", sections: [ { label: "Morning", places: [ { time: "05:30", name: "鹿野高台", rating: "4.6 ★", desc: "熱氣球", lat: 22.9130, lng: 121.1205, img: "https://placehold.co/100x100/fecaca/b91c1c?text=Balloon" }, { driveTime: "約 20 分鐘", time: "10:00", name: "初鹿牧場", rating: "4.2 ★", desc: "親近自然", lat: 22.8468, lng: 121.0883, img: "https://placehold.co/100x100/bbf7d0/15803d?text=Farm" } ]}, { label: "Afternoon", places: [ { driveTime: "約 30 分鐘", time: "14:00", name: "史前文化博物館", rating: "4.5 ★", desc: "歷史探索", lat: 22.7600, lng: 121.0930, img: "https://placehold.co/100x100/e9d5ff/7e22ce?text=History" }, { driveTime: "約 40 分鐘", time: "16:30", name: "太麻里平交道", rating: "4.3 ★", desc: "櫻木花道", lat: 22.6186, lng: 121.0028, img: "https://placehold.co/100x100/bae6fd/0369a1?text=Crossing" } ]} ] },
@@ -135,6 +158,31 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     let currentLayerGroup = L.featureGroup().addTo(map);
     let routingControl = null;
+
+    // --- 新增：面板拖拉與收合邏輯 ---
+    const sidePanel = document.getElementById('sidePanel');
+    const dragHandle = document.getElementById('dragHandle');
+    let startY = 0;
+
+    dragHandle.addEventListener('touchstart', e => {
+        startY = e.touches[0].clientY;
+    }, {passive: true});
+
+    dragHandle.addEventListener('touchend', e => {
+        let endY = e.changedTouches[0].clientY;
+        if (endY - startY > 20) { // 往下滑動 -> 縮小
+            sidePanel.classList.add('collapsed');
+        } else if (startY - endY > 20) { // 往上滑動 -> 展開
+            sidePanel.classList.remove('collapsed');
+        } else { // 單純點擊 -> 切換狀態
+            sidePanel.classList.toggle('collapsed');
+        }
+    });
+
+    // --- 新增：點擊地圖時強制關閉鍵盤 ---
+    document.getElementById('mapArea').addEventListener('touchstart', () => {
+        document.querySelectorAll('input').forEach(input => input.blur());
+    }, {passive: true});
 
     function initNav() {
         const nav = document.getElementById('navContainer');
@@ -157,7 +205,12 @@
         nav.appendChild(chatBtn);
     }
     
-    function setActive(el) { document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active')); el.classList.add('active'); }
+    function setActive(el) { 
+        document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active')); 
+        el.classList.add('active'); 
+        sidePanel.classList.remove('collapsed'); // 點擊按鈕時自動展開面板
+    }
+    
     function clearMap() { currentLayerGroup.clearLayers(); if (routingControl) map.removeControl(routingControl); }
     
     function renderDay(day) {
@@ -190,7 +243,8 @@
     function renderChat() {
         clearMap(); map.setView([23.5, 121], 7);
         let html = `
-            <h1 class="route-title">互動留言板</h1>
+            <div class="day-label" style="color:#166534; margin-top:0;">LIVE CHAT</div>
+            <h1 class="route-title" style="margin-bottom:0;">互動留言板</h1>
             <div class="chat-container">
                 <div class="chat-messages" id="chatMsgs">連線中...</div>
                 <div class="chat-input-area">
@@ -203,13 +257,10 @@
         
         const myName = getMyName();
         const nameInput = document.getElementById('nameInput');
-        
-        // 如果已經有記憶名字，就把名字填入並鎖定不給改
         if (myName) {
             nameInput.value = myName;
             nameInput.readOnly = true;
             nameInput.classList.add('locked');
-            // 如果想換名字，可以點擊名字欄位解鎖 (隱藏功能，避免家人誤按)
             nameInput.ondblclick = function() {
                 if(confirm("你要更改綁定的名字嗎？")) {
                     this.readOnly = false;
@@ -226,8 +277,6 @@
             const msgList = document.getElementById('chatMsgs');
             if (!msgList) return;
             msgList.innerHTML = '';
-            
-            // 取得當前瀏覽器的使用者名稱 (用來判斷要不要顯示按鈕)
             const currentUser = getMyName();
 
             for (let id in data) {
@@ -235,20 +284,16 @@
                 const d = m.timestamp ? new Date(m.timestamp) : new Date();
                 const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
                 
-                // 判斷這則留言是不是「自己」留的
                 let actionBtnsHTML = '';
                 let bubbleClass = 'msg-bubble';
-                
                 if (m.user === currentUser && currentUser !== '') {
                     bubbleClass += ' has-actions';
                     actionBtnsHTML = `
                         <div class="msg-actions">
                             <button class="msg-action-btn" onclick="window.editMsg('${id}', '${m.text}', '${m.user}')"><i class="fa-solid fa-pen"></i></button>
                             <button class="msg-action-btn" onclick="window.deleteMsg('${id}', '${m.user}')"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    `;
+                        </div>`;
                 }
-                
                 msgList.innerHTML += `
                     <div class="${bubbleClass}">
                         ${actionBtnsHTML}
@@ -265,22 +310,17 @@
             let name = currentNameInput.value.trim();
             const text = document.getElementById('msgInput').value.trim();
             
-            if (!name) {
-                alert("請先輸入你的名字喔！");
-                currentNameInput.focus();
-                return;
-            }
-            
+            if (!name) { alert("請先輸入你的名字喔！"); currentNameInput.focus(); return; }
             if (text) { 
-                // 第一次輸入時，把名字存進手機記憶體裡，並鎖定輸入框
                 if (!currentNameInput.readOnly) {
                     localStorage.setItem('familyTripName', name);
                     currentNameInput.readOnly = true;
                     currentNameInput.classList.add('locked');
                 }
-
                 push(ref(db, 'messages'), { user: name, text: text, timestamp: serverTimestamp() }); 
                 document.getElementById('msgInput').value = ''; 
+                // 傳送後保持輸入框焦點 (可選)
+                document.getElementById('msgInput').focus();
             }
         };
         document.getElementById('sendBtn').onclick = sendAction;
