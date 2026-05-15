@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 暑假環島互動行程表 V8</title>
+    <title>2026 暑假環島互動行程表 V8.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -23,6 +23,7 @@
         .nav-pill.chat-btn.active { background: #22c55e; color: white; }
         .side-panel { width: 380px; background: white; height: calc(100vh - 40px); margin: 20px 20px 20px 0; border-radius: 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; z-index: 10; flex-shrink: 0; }
         .panel-content { padding: 24px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; }
+        
         .day-label { font-size: 12px; color: #475569; margin-bottom: 8px; display: flex; align-items: center; }
         .day-date { font-weight: 700; color: #3b82f6; margin-left: 8px; font-size: 13px; background: #eff6ff; padding: 2px 8px; border-radius: 12px; }
         .route-title { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 12px 0; }
@@ -41,15 +42,26 @@
         .notes-list { list-style: none; padding: 0; }
         .notes-list li { background: #f8fafc; margin-bottom: 12px; padding: 16px; border-radius: 12px; border-left: 4px solid #facc15; font-size: 14px; line-height: 1.6; color: #334155; }
         .notes-list li strong { color: #1e293b; display: block; margin-bottom: 4px; }
+        
+        /* 留言板優化樣式 */
         .chat-container { display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; }
         .chat-messages { flex-grow: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 4px; }
-        .msg-bubble { background: #f1f5f9; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; }
+        .msg-bubble { background: #f1f5f9; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; position: relative; padding-right: 50px; }
         .msg-user { font-weight: 700; color: #3b82f6; font-size: 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
         .msg-time { font-size: 10px; color: #94a3b8; margin-top: 4px; text-align: right; }
-        .chat-input-area { display: flex; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 16px; flex-shrink: 0; }
+        
+        /* 新增：編輯與刪除按鈕樣式 */
+        .msg-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
+        .msg-action-btn { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 12px; padding: 2px; transition: 0.2s; }
+        .msg-action-btn:hover { color: #64748b; }
+        
+        .chat-input-area { display: flex; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 16px; flex-shrink: 0; align-items: center; }
         #nameInput { width: 60px; border: 1px solid #cbd5e1; padding: 10px; border-radius: 20px; font-size: 13px; outline: none; }
         #msgInput { flex-grow: 1; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 20px; font-size: 14px; outline: none; }
-        #sendBtn { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 500; }
+        /* 修正：修復按鈕被截斷的問題 */
+        #sendBtn { background: #3b82f6; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; transition: 0.2s; }
+        #sendBtn:hover { background: #2563eb; }
+
         @media (max-width: 768px) { .app-container { flex-direction: column; } .map-area { height: 40vh; } .side-panel { width: 100%; height: 60vh; margin: 0; border-radius: 20px 20px 0 0; } }
     </style>
 </head>
@@ -61,8 +73,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script type="module">
+    // 新增：引入 update 和 remove 功能
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, onValue, serverTimestamp, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    
     const firebaseConfig = {
         apiKey: "AIzaSyCHb7meFSzo5GKF-bvVpKD-xcOv0htN3Cc",
         authDomain: "ytooty-travel-notes.firebaseapp.com",
@@ -75,6 +89,25 @@
     };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+
+    // 全域函數：提供編輯與刪除使用
+    window.editMsg = function(msgId, oldText) {
+        // 跳出對話框讓使用者修改
+        const newText = prompt("請輸入修改後的訊息：", oldText);
+        if (newText !== null && newText.trim() !== "") {
+            // 更新 Firebase 上的資料
+            update(ref(db, 'messages/' + msgId), { text: newText.trim() });
+        }
+    };
+    
+    window.deleteMsg = function(msgId) {
+        // 跳出確認視窗防呆
+        if (confirm("確定要刪除這則留言嗎？")) {
+            // 刪除 Firebase 上的資料
+            remove(ref(db, 'messages/' + msgId));
+        }
+    };
+
     const itineraryData = {
         1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 池上", desc: "第一天啟程！", sections: [ { label: "Morning", places: [ { time: "05:00", name: "台北松山車站", rating: "4.3 ★", desc: "出發走國5接蘇花", img: "https://placehold.co/100x100/bfdbfe/1d4ed8?text=Train", lat: 25.0498, lng: 121.5781 }, { driveTime: "約 2.5 小時", time: "08:30", name: "台泥DAKA園區", rating: "4.2 ★", desc: "休憩補給", img: "https://placehold.co/100x100/d9f99d/4d7c0f?text=DAKA", lat: 24.3090, lng: 121.7538 }, { driveTime: "約 1.5 小時", time: "10:30", name: "光榮博物館", rating: "4.5 ★", desc: "參觀", img: "https://placehold.co/100x100/fef08a/a16207?text=Museum", lat: 23.9782, lng: 121.6025 } ]}, { label: "Afternoon", places: [ { driveTime: "約 50 分鐘", time: "14:00", name: "富興小火車", rating: "4.6 ★", desc: "需確認營運", img: "https://placehold.co/100x100/fbcfe8/be185d?text=Train", lat: 23.6300, lng: 121.4320 }, { driveTime: "約 1.5 小時", time: "17:30", name: "悟饕池上飯包", rating: "4.1 ★", desc: "晚餐", img: "https://placehold.co/100x100/fed7aa/c2410c?text=Bento", lat: 23.1235, lng: 121.1965 } ]} ] },
         2: { date: "2026/07/04 (六)", title: "池上 ➔ 台東", desc: "東台灣自然美景。", sections: [ { label: "Morning", places: [ { time: "05:30", name: "鹿野高台", rating: "4.6 ★", desc: "熱氣球", lat: 22.9130, lng: 121.1205, img: "https://placehold.co/100x100/fecaca/b91c1c?text=Balloon" }, { driveTime: "約 20 分鐘", time: "10:00", name: "初鹿牧場", rating: "4.2 ★", desc: "親近自然", lat: 22.8468, lng: 121.0883, img: "https://placehold.co/100x100/bbf7d0/15803d?text=Farm" } ]}, { label: "Afternoon", places: [ { driveTime: "約 30 分鐘", time: "14:00", name: "史前文化博物館", rating: "4.5 ★", desc: "歷史探索", lat: 22.7600, lng: 121.0930, img: "https://placehold.co/100x100/e9d5ff/7e22ce?text=History" }, { driveTime: "約 40 分鐘", time: "16:30", name: "太麻里平交道", rating: "4.3 ★", desc: "櫻木花道", lat: 22.6186, lng: 121.0028, img: "https://placehold.co/100x100/bae6fd/0369a1?text=Crossing" } ]} ] },
@@ -84,10 +117,12 @@
         6: { date: "2026/07/08 (三)", title: "台中 ➔ 台北", desc: "返程溫暖的家。", sections: [ { label: "Morning", places: [ { time: "10:00", name: "自然科學博物館", rating: "4.7 ★", desc: "參觀", lat: 24.1533, lng: 120.6695, img: "https://placehold.co/100x100/e9d5ff/7e22ce?text=Science" } ]}, { label: "Afternoon", places: [ { driveTime: "約 2 小時", time: "16:00", name: "溫暖的家", rating: "5.0 ★", desc: "抵達台北", lat: 25.0498, lng: 121.5781, img: "https://placehold.co/100x100/bfdbfe/1d4ed8?text=Home" } ]} ] },
         notes: { title: "注意事項", desc: "旅途提醒：", items: [ { title: "車輛檢查", content: "確認油量胎壓。" }, { title: "預約提醒", content: "熱門景點建議預約。" } ] }
     };
+
     let map = L.map('map', { zoomControl: false }).setView([23.5, 121], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     let currentLayerGroup = L.featureGroup().addTo(map);
     let routingControl = null;
+
     function initNav() {
         const nav = document.getElementById('navContainer');
         for (let i = 1; i <= 6; i++) {
@@ -108,8 +143,10 @@
         chatBtn.onclick = () => { setActive(chatBtn); renderChat(); };
         nav.appendChild(chatBtn);
     }
+    
     function setActive(el) { document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active')); el.classList.add('active'); }
     function clearMap() { currentLayerGroup.clearLayers(); if (routingControl) map.removeControl(routingControl); }
+    
     function renderDay(day) {
         const data = itineraryData[day];
         let html = `<div class="day-label">DAY ${day} <span class="day-date">${data.date}</span></div><h1 class="route-title">${data.title}</h1><p class="route-desc">${data.desc}</p>`;
@@ -129,16 +166,19 @@
         coords.forEach((c, idx) => { L.marker(c, {icon: L.divIcon({ className: '', html: `<div style="background:#111827;color:white;width:20px;height:20px;border-radius:50%;text-align:center;line-height:20px;font-size:10px;border:2px solid white;">${idx+1}</div>` })}).addTo(currentLayerGroup); });
         if (coords.length > 0) map.fitBounds(L.latLngBounds(coords), { padding: [50, 50] });
     }
+    
     function renderNotes() {
         const data = itineraryData.notes;
         let html = `<div class="day-label" style="color:#ca8a04;">IMPORTANT</div><h1 class="route-title">${data.title}</h1><ul class="notes-list">${data.items.map(i => `<li><strong>${i.title}</strong>${i.content}</li>`).join('')}</ul>`;
         document.getElementById('panelContent').innerHTML = html;
         clearMap(); map.setView([23.5, 121], 7);
     }
+    
     function renderChat() {
         clearMap(); map.setView([23.5, 121], 7);
         let html = `<h1 class="route-title">互動留言板</h1><div class="chat-container"><div class="chat-messages" id="chatMsgs">連線中...</div><div class="chat-input-area"><input type="text" id="nameInput" placeholder="名字"><input type="text" id="msgInput" placeholder="訊息"><button id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button></div></div>`;
         document.getElementById('panelContent').innerHTML = html;
+        
         const msgsRef = ref(db, 'messages');
         onValue(msgsRef, (snapshot) => {
             const data = snapshot.val();
@@ -148,16 +188,40 @@
             for (let id in data) {
                 const m = data[id];
                 const d = m.timestamp ? new Date(m.timestamp) : new Date();
-                msgList.innerHTML += `<div class="msg-bubble"><div class="msg-user">${m.user || '旅伴'}</div><div>${m.text}</div><div class="msg-time">${d.getHours()}:${d.getMinutes()}</div></div>`;
+                // 修正時間顯示格式 (補零，例如 09:05)
+                const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                
+                // 新增：帶有編輯與刪除按鈕的留言泡泡
+                msgList.innerHTML += `
+                    <div class="msg-bubble">
+                        <div class="msg-actions">
+                            <button class="msg-action-btn" onclick="window.editMsg('${id}', '${m.text}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="msg-action-btn" onclick="window.deleteMsg('${id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div class="msg-user">${m.user || '旅伴'}</div>
+                        <div>${m.text}</div>
+                        <div class="msg-time">${timeStr}</div>
+                    </div>`;
             }
-            msgList.scrollTop = msgList.scrollHeight;
+            // 自動捲到底部
+            setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 100);
         });
-        document.getElementById('sendBtn').onclick = () => {
+        
+        // 綁定傳送事件
+        const sendAction = () => {
             const name = document.getElementById('nameInput').value.trim();
             const text = document.getElementById('msgInput').value.trim();
-            if (text) { push(ref(db, 'messages'), { user: name, text: text, timestamp: serverTimestamp() }); document.getElementById('msgInput').value = ''; }
+            if (text) { 
+                push(ref(db, 'messages'), { user: name, text: text, timestamp: serverTimestamp() }); 
+                document.getElementById('msgInput').value = ''; 
+            }
         };
+        document.getElementById('sendBtn').onclick = sendAction;
+        document.getElementById('msgInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendAction();
+        });
     }
+    
     initNav(); renderDay(1);
 </script>
 </body>
