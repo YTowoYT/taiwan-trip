@@ -43,6 +43,7 @@
         .place-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; background: #e5e7eb; }
         .place-info { flex-grow: 1; }
         .place-time { font-size: 12px; color: #111827; margin-bottom: 2px; }
+        
         .place-name-link { text-decoration: none; color: inherit; display: inline-block; margin: 0 0 4px 0; transition: 0.2s; }
         .place-name { font-size: 15px; font-weight: 700; color: #111827; margin: 0; display: flex; align-items: center; gap: 6px; }
         .place-name-link:hover .place-name { color: #3b82f6; }
@@ -71,7 +72,10 @@
         #msgInput { flex-grow: 1; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 20px; font-size: 14px; outline: none; }
         #sendBtn { background: #3b82f6; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; transition: 0.2s; }
         
-        /* 記帳區樣式 */
+        /* 記帳區與按鈕優化 */
+        #addExpBtn { background: #dc2626; color: white; border: none; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; flex-shrink: 0; transition: 0.2s; }
+        #addExpBtn:hover { background: #b91c1c; }
+        
         .fund-status { padding: 16px; border-radius: 12px; margin-bottom: 16px; font-weight: bold; text-align: center; font-size: 16px; display: flex; flex-direction: column; gap: 4px; }
         .fund-status.good { background-color: #1e3a8a; color: #fde047; }
         .fund-status.warning { background-color: #b91c1c; color: #fde047; }
@@ -113,7 +117,7 @@
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, serverTimestamp, update, remove, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, onValue, serverTimestamp, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     
     const firebaseConfig = {
         apiKey: "AIzaSyCHb7meFSzo5GKF-bvVpKD-xcOv0htN3Cc",
@@ -222,7 +226,21 @@
             itineraryData[i].sections.forEach(sec => {
                 sec.places.forEach(p => {
                     allCoords.push([p.lat, p.lng]);
-                    L.marker([p.lat, p.lng], {icon: L.divIcon({ className: '', html: `<div style="background:#111827;color:white;width:18px;height:18px;border-radius:50%;text-align:center;line-height:18px;font-size:9px;border:2px solid white;box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${iconIndex++}</div>` })}).addTo(currentLayerGroup);
+                    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}`;
+                    const marker = L.marker([p.lat, p.lng], {
+                        icon: L.divIcon({ 
+                            className: '', 
+                            html: `<div style="background:#111827;color:white;width:18px;height:18px;border-radius:50%;text-align:center;line-height:18px;font-size:9px;border:2px solid white;box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor:pointer;">${iconIndex++}</div>` 
+                        })
+                    }).addTo(currentLayerGroup);
+                    
+                    marker.bindPopup(`
+                        <div style="font-family:'Noto Sans TC',sans-serif; padding:4px; text-align:center;">
+                            <div style="font-size:11px; color:#3b82f6; font-weight:bold; margin-bottom:2px;">Day ${i}</div>
+                            <h4 style="margin:0 0 8px 0; font-size:13px; color:#111827; font-weight:700;">${p.name}</h4>
+                            <a href="${googleMapsUrl}" target="_blank" style="display:inline-block; background:#3b82f6; color:white; padding:5px 10px; border-radius:12px; font-size:11px; text-decoration:none; font-weight:500;">確認導航 <i class="fa-solid fa-location-arrow"></i></a>
+                        </div>
+                    `);
                 });
             });
         }
@@ -234,29 +252,49 @@
         const data = itineraryData[day];
         let html = `<div class="day-label">DAY ${day} <span class="day-date">${data.date}</span></div><h1 class="route-title">${data.title}</h1><p class="route-desc">${data.desc}</p>`;
         const coords = [];
+        
+        clearMap();
+        let markerIndex = 1;
+
         data.sections.forEach(sec => {
             html += `<div class="time-section"><div class="time-label">${sec.label}</div>`;
             sec.places.forEach(p => {
                 if (p.driveTime) html += `<div class="drive-time-line"><i class="fa-solid fa-car-side"></i> ${p.driveTime}</div>`;
-                const mapLink = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(p.name)}`;
+                
+                const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}`;
                 html += `
                     <div class="place-card">
                         <div class="place-img-wrapper"><img class="place-img" src="${p.img}"></div>
                         <div class="place-info">
                             <div class="place-time">${p.time}</div>
-                            <a href="${mapLink}" target="_blank" class="place-name-link"><h3 class="place-name">${p.name} <i class="fa-solid fa-location-arrow map-icon"></i></h3></a>
+                            <a href="${googleMapsUrl}" target="_blank" class="place-name-link"><h3 class="place-name">${p.name} <i class="fa-solid fa-location-arrow map-icon"></i></h3></a>
                             <div class="place-rating">${p.rating}</div>
                             <div class="place-desc">${p.desc}</div>
                         </div>
                     </div>`;
+                
+                const marker = L.marker([p.lat, p.lng], {
+                    icon: L.divIcon({ 
+                        className: '', 
+                        html: `<div style="background:#111827;color:white;width:20px;height:20px;border-radius:50%;text-align:center;line-height:20px;font-size:10px;border:2px solid white; cursor:pointer;">${markerIndex}</div>` 
+                    })
+                }).addTo(currentLayerGroup);
+
+                marker.bindPopup(`
+                    <div style="font-family:'Noto Sans TC',sans-serif; padding:4px; text-align:center;">
+                        <h4 style="margin:0 0 8px 0; font-size:14px; color:#111827; font-weight:700;">${p.name}</h4>
+                        <a href="${googleMapsUrl}" target="_blank" style="display:inline-block; background:#3b82f6; color:white; padding:6px 12px; border-radius:12px; font-size:12px; text-decoration:none; font-weight:500;">確認導航 <i class="fa-solid fa-location-arrow"></i></a>
+                    </div>
+                `);
+
                 coords.push([p.lat, p.lng]);
+                markerIndex++;
             });
             html += `</div>`;
         });
         document.getElementById('panelContent').innerHTML = html;
-        clearMap();
+        
         if (coords.length > 1) { routingControl = L.Routing.control({ waypoints: coords.map(c => L.latLng(c[0], c[1])), createMarker: () => null, show: false, lineOptions: { styles: [{color: '#3b82f6', weight: 5}] } }).addTo(map); }
-        coords.forEach((c, idx) => { L.marker(c, {icon: L.divIcon({ className: '', html: `<div style="background:#111827;color:white;width:20px;height:20px;border-radius:50%;text-align:center;line-height:20px;font-size:10px;border:2px solid white;">${idx+1}</div>` })}).addTo(currentLayerGroup); });
         
         if (coords.length > 0) {
             if (day === 6) {
@@ -363,7 +401,7 @@
                 <div style="width:100%; font-size:12px; color:#475569; margin-bottom:6px;">記錄人: <strong>${getMyName() || '未綁定名字 (請先至留言板輸入)'}</strong></div>
                 <input type="text" id="expItemInput" placeholder="項目名稱 (例:午餐)" ${!getMyName() ? 'disabled' : ''}>
                 <input type="number" id="expPriceInput" placeholder="金額" style="width:80px;" ${!getMyName() ? 'disabled' : ''}>
-                <button id="addExpBtn" style="background:#dc2626;" ${!getMyName() ? 'disabled' : ''}><i class="fa-solid fa-plus"></i></button>
+                <button id="addExpBtn" ${!getMyName() ? 'disabled' : ''}>新增紀錄</button>
             </div>
             
             <div id="expenseListArea" style="flex-grow:1; overflow-y:auto; margin-top:16px; padding-bottom:20px;"></div>
