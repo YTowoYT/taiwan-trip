@@ -51,7 +51,6 @@
         .place-desc { font-size: 12px; color: #6b7280; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
         .drive-time-line { margin: -8px 0 12px 30px; padding-left: 50px; border-left: 2px dashed #cbd5e1; height: 30px; display: flex; align-items: center; font-size: 11px; color: #64748b; }
         
-        /* 彩蛋按鈕與標籤 */
         .easter-egg-btn { background: #fef08a; border: 1px solid #facc15; font-size: 12px; cursor: pointer; margin-left: 10px; padding: 4px 10px; border-radius: 15px; font-weight: bold; color: #854d0e; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-5px);} 60% {transform: translateY(-3px);} }
         .egg-badge { background: #fef08a; color: #854d0e; font-size: 10px; padding: 2px 6px; border-radius: 8px; font-weight: bold; border: 1px solid #fde047; }
@@ -76,25 +75,9 @@
         #msgInput { flex-grow: 1; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 20px; font-size: 14px; outline: none; }
         #sendBtn { background: #3b82f6; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; transition: 0.2s; }
         
-        .fund-status { padding: 16px; border-radius: 12px; margin-bottom: 16px; font-weight: bold; text-align: center; font-size: 16px; display: flex; flex-direction: column; gap: 4px; }
-        .fund-status.good { background-color: #1e3a8a; color: #fde047; }
-        .fund-status.warning { background-color: #b91c1c; color: #fde047; }
-        .expense-group { margin-bottom: 16px; }
-        .expense-user { font-weight: bold; font-size: 16px; color: #111827; }
-        .expense-items { border-left: 2px solid #cbd5e1; margin-left: 8px; padding-left: 12px; margin-top: 4px; }
-        .expense-item { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 4px; align-items: center; }
-        .expense-item-del { color: #fca5a5; background: none; border: none; cursor: pointer; padding: 0 4px; }
-        .expense-total { font-size: 14px; font-weight: bold; color: #1e293b; margin-top: 6px; }
-        .summary-area { border-top: 2px dashed #cbd5e1; padding-top: 16px; margin-top: 20px; padding-bottom: 20px; }
-        .summary-title { font-weight: bold; margin-bottom: 12px; color: #111827; }
-        .summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 6px; }
-        .summary-grand-total { font-weight: bold; font-size: 18px; color: #b91c1c; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; }
-        
-        /* === 彈出視窗共用樣式 === */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; backdrop-filter: blur(4px); justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 20px; width: 85%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; position: relative; }
         
-        /* 景點詳細視窗專屬 */
         .modal-banner { width: 100%; height: 180px; background: #e5e7eb; position: relative; }
         .modal-banner img { width: 100%; height: 100%; object-fit: cover; }
         .modal-close-icon { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
@@ -182,31 +165,22 @@
 
     function getMyName() { return localStorage.getItem('familyTripName') || ''; }
 
-    // === 景點詳細視窗控制 ===
     window.openPlaceModal = function(name, img, rating, desc) {
         document.getElementById('modalName').innerText = name;
         document.getElementById('modalImg').src = img;
         document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
         document.getElementById('modalDesc').innerText = desc;
-        document.getElementById('modalNavBtn').href = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(name)}`;
+        document.getElementById('modalNavBtn').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
         document.getElementById('detailModal').style.display = 'flex';
     };
     window.closeDetailModal = function() { document.getElementById('detailModal').style.display = 'none'; };
 
-    // === 彩蛋動態載入控制 ===
-    window.day3EggAdded = false; // 重整網頁時預設重置為不顯示
-    
-    window.openEggModal = function() {
-        document.getElementById('eggModal').style.display = 'flex';
-    };
-    window.closeEggModal = function() {
-        document.getElementById('eggModal').style.display = 'none';
-    };
+    window.day3EggAdded = false;
+    window.openEggModal = function() { document.getElementById('eggModal').style.display = 'flex'; };
+    window.closeEggModal = function() { document.getElementById('eggModal').style.display = 'none'; };
     window.addEggToItinerary = function() {
         window.day3EggAdded = true;
         document.getElementById('eggModal').style.display = 'none';
-        
-        // 動態覆蓋 Day 3 Morning 的行程，將時間往後推並插入秘境
         itineraryData[3].sections[0].places = [
             { time: "08:00", name: "華源椰林大道", rating: "4.4 ★", desc: "【秘境彩蛋 🌴】位於太麻里台9線旁的夢幻小路，兩旁高聳入雲的椰子樹筆直延伸，路的盡頭直接連接著蔚藍無垠的太平洋，彷彿一秒置身南洋海島！", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", lat: 22.6480, lng: 121.0142, isEgg: true },
             { driveTime: "約 2 分鐘", time: "08:15", name: "華源海灣", rating: "4.5 ★", desc: "【秘境彩蛋 🌊】寬闊的沙灘與漸層的太平洋海水藍得不可思議。這裡還有最知名的圓形巨型蓄水池，能拍出絕美、如魔鏡般的「天空之鏡」海景倒影！", img: "https://images.unsplash.com/photo-1473116763269-25541579ff6f?auto=format&fit=crop&w=400&q=80", lat: 22.6417, lng: 121.0114, isEgg: true },
@@ -214,7 +188,7 @@
             { driveTime: "約 15 分鐘", time: "09:40", name: "多良車站", rating: "4.4 ★", desc: "被譽為台灣最美麗的火車站。站在觀景台上，能捕捉紅色鐵欄杆、復古鐵道與漸層太平洋完美交織的絕景。", img: "https://placehold.co/400x250/99f6e4/0f766e?text=Duoliang+Station", lat: 22.5085, lng: 120.9592 }, 
             { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "抵達屏東東港享用豐盛的海鮮午餐，這是一家連黑鮪魚都非常有名的在地知名老字號餐廳。", img: "https://placehold.co/400x250/fecdd3/be123c?text=Seafood+Lunch", lat: 22.4660, lng: 120.4440 }
         ];
-        renderDay(3); // 重新渲染第三天畫面
+        renderDay(3);
     };
 
     window.editMsg = function(msgId, oldText, msgOwner) {
@@ -234,7 +208,7 @@
         update(ref(db, 'fund_settings'), { [field]: Number(value) });
     };
 
-    // === 行程資料庫 (全新調整住宿與路線) ===
+    // === 行程資料庫 (精準校正 Day 2 起點與 03:30 - 04:00 動線) ===
     const itineraryData = {
         1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 台東", desc: "第一天啟程與初鹿牧場！", sections: [ 
             { label: "Morning", places: [ 
@@ -251,12 +225,13 @@
         ] },
         2: { date: "2026/07/04 (六)", title: "熱氣球 ➔ 飯店補眠 ➔ 博物館", desc: "早起追熱氣球，下午知性避暑之旅。", sections: [ 
             { label: "Early Morning (熱氣球行程)", places: [ 
-                { time: "03:30", name: "鹿鳴溫泉酒店 (停車場)", rating: "4.1 ★", desc: "摸黑早起！將車子開往鹿鳴酒店的停車場集合，準備搭乘熱氣球專屬接駁車。", img: "https://placehold.co/400x250/fecaca/b91c1c?text=Luminous+Parking", lat: 22.8988, lng: 121.0963 }, 
-                { driveTime: "搭乘接駁車", time: "04:30", name: "鹿野高台", rating: "4.6 ★", desc: "清晨前來觀賞壯觀的國際熱氣球嘉年華，五彩繽紛的熱氣球在縱谷間緩緩升起，是台東最美的夏日經典畫面。", img: "https://placehold.co/400x250/fecaca/b91c1c?text=Hot+Air+Balloon", lat: 22.9130, lng: 121.1205 },
-                { driveTime: "約 40 分鐘", time: "07:00", name: "娜路彎銀河酒店 (補眠)", rating: "4.3 ★", desc: "看完熱氣球後回到飯店吃早餐，接著瘋狂補眠到中午，把體力睡回來！", img: "https://placehold.co/400x250/c7d2fe/4338ca?text=Rest+at+Hotel", lat: 22.7758, lng: 121.1242 }
+                { time: "03:30", name: "娜路彎銀河酒店 (出發)", rating: "4.3 ★", desc: "【本日點對點起點 🏁】清晨於娜路彎銀河酒店集合準備出發，摸黑在 03:30 - 04:00 之間將車子開往鹿鳴溫泉酒店。", img: "https://placehold.co/400x250/c7d2fe/4338ca?text=Naruwan+Galaxy", lat: 22.7758, lng: 121.1242 },
+                { driveTime: "約 30 分鐘", time: "04:00", name: "鹿鳴溫泉酒店 (停車場)", rating: "4.1 ★", desc: "必須在 04:00 前將車輛開抵鹿鳴飯店停車場停妥！隨即轉搭乘預約好的熱氣球專屬接駁車直奔鹿野高台。", img: "https://placehold.co/400x250/fecaca/b91c1c?text=Luminous+Parking", lat: 22.8988, lng: 121.0963 }, 
+                { driveTime: "搭乘接駁車", time: "04:45", name: "鹿野高台", rating: "4.6 ★", desc: "清晨前來觀賞壯觀的國際熱氣球嘉年華，五彩繽紛的熱氣球在縱谷間緩緩升起，是台東最美的夏日經典畫面。", img: "https://placehold.co/400x250/fecaca/b91c1c?text=Hot+Air+Balloon", lat: 22.9130, lng: 121.1205 },
+                { driveTime: "約 40 分鐘", time: "07:00", name: "娜路彎銀河酒店 (補眠)", rating: "4.3 ★", desc: "看完熱氣球後大約於早上 07:00 回到飯店吃早餐，接著瘋狂補眠到中午 12:00，把爆肝體力完全睡回來！", img: "https://placehold.co/400x250/c7d2fe/4338ca?text=Rest+at+Hotel", lat: 22.7758, lng: 121.1242 }
             ]}, 
             { label: "Afternoon", places: [ 
-                { time: "12:00", name: "台東市區 (午餐時間)", rating: "- ★", desc: "退房後，直接前往台東市區尋找在地美食享用午餐。", img: "https://placehold.co/400x250/fed7aa/c2410c?text=Lunch", lat: 22.7550, lng: 121.1450 },
+                { time: "12:00", name: "台東市區 (午餐時間)", rating: "- ★", desc: "好好的睡飽退房後，直接前往台東市區尋找在地美食享用午餐。", img: "https://placehold.co/400x250/fed7aa/c2410c?text=Lunch", lat: 22.7550, lng: 121.1450 },
                 { driveTime: "約 15 分鐘", time: "13:30", name: "國立臺灣史前文化博物館", rating: "4.5 ★", desc: "全新內部整修落成，吃飽後吹冷氣躲太陽的好去處。能深度探索台灣遠古歷史與南島語族文化。", img: "https://placehold.co/400x250/e9d5ff/7e22ce?text=Prehistory+Museum", lat: 22.7600, lng: 121.0930 } 
             ]} 
         ] },
@@ -391,7 +366,6 @@
         data.sections.forEach(sec => {
             html += `<div class="time-section"><div class="time-label">${sec.label}`;
             
-            // 加入動態秘境按鈕
             if (day === 3 && sec.label === 'Morning' && !window.day3EggAdded) {
                 html += ` <button class="easter-egg-btn" onclick="window.openEggModal()">🎁 點我尋找秘境</button>`;
             }
