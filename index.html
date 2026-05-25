@@ -38,20 +38,24 @@
         .route-desc { font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 20px; }
         .time-section { margin-bottom: 24px; }
         .time-label { font-size: 16px; font-weight: 500; color: #111827; margin-bottom: 12px; }
-        .place-card { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+        
+        /* 景點卡片點擊優化 */
+        .place-card { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; cursor: pointer; padding: 8px; border-radius: 12px; transition: background 0.2s; }
+        .place-card:hover { background-color: #f1f5f9; }
         .place-img-wrapper { width: 64px; height: 64px; flex-shrink: 0; }
         .place-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; background: #e5e7eb; }
         .place-info { flex-grow: 1; }
-        .place-time { font-size: 12px; color: #111827; margin-bottom: 2px; }
+        .place-time { font-size: 12px; color: #64748b; margin-bottom: 2px; }
         
-        .place-name-link { text-decoration: none; color: inherit; display: inline-block; margin: 0 0 4px 0; transition: 0.2s; }
         .place-name { font-size: 15px; font-weight: 700; color: #111827; margin: 0; display: flex; align-items: center; gap: 6px; }
-        .place-name-link:hover .place-name { color: #3b82f6; }
-        .map-icon { font-size: 12px; color: #3b82f6; }
-        .place-rating { font-size: 11px; color: #475569; }
-        .place-desc { font-size: 11px; color: #6b7280; margin-top: 2px; }
+        .place-card:hover .place-name { color: #3b82f6; }
+        .place-rating { font-size: 11px; color: #475569; margin-top: 2px; }
+        .place-desc { font-size: 12px; color: #6b7280; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
         .drive-time-line { margin: -8px 0 12px 30px; padding-left: 50px; border-left: 2px dashed #cbd5e1; height: 30px; display: flex; align-items: center; font-size: 11px; color: #64748b; }
         
+        /* 彩蛋標籤樣式 */
+        .egg-badge { background: #fef08a; color: #854d0e; font-size: 10px; padding: 2px 6px; border-radius: 8px; font-weight: bold; border: 1px solid #fde047; }
+
         .notes-list { list-style: none; padding: 0; }
         .notes-list li { background: #f8fafc; margin-bottom: 12px; padding: 16px; border-radius: 12px; border-left: 4px solid #facc15; font-size: 14px; line-height: 1.6; color: #334155; }
         .notes-list li strong { color: #1e293b; display: block; margin-bottom: 4px; }
@@ -72,10 +76,6 @@
         #msgInput { flex-grow: 1; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 20px; font-size: 14px; outline: none; }
         #sendBtn { background: #3b82f6; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; transition: 0.2s; }
         
-        /* 記帳區與按鈕優化 */
-        #addExpBtn { background: #dc2626; color: white; border: none; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; flex-shrink: 0; transition: 0.2s; }
-        #addExpBtn:hover { background: #b91c1c; }
-        
         .fund-status { padding: 16px; border-radius: 12px; margin-bottom: 16px; font-weight: bold; text-align: center; font-size: 16px; display: flex; flex-direction: column; gap: 4px; }
         .fund-status.good { background-color: #1e3a8a; color: #fde047; }
         .fund-status.warning { background-color: #b91c1c; color: #fde047; }
@@ -90,15 +90,19 @@
         .summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 6px; }
         .summary-grand-total { font-weight: bold; font-size: 18px; color: #b91c1c; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; }
         
-        /* === 彩蛋動畫與視窗樣式 === */
-        .easter-egg-btn { background: none; border: none; font-size: 1.2em; cursor: pointer; margin-left: 6px; animation: bounce 2s infinite; padding: 0; vertical-align: middle; }
-        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-8px);} 60% {transform: translateY(-4px);} }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; backdrop-filter: blur(2px); }
-        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 16px; text-align: center; width: 80%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .modal-title { color: #e74c3c; font-size: 18px; font-weight: bold; margin-bottom: 12px; }
-        .modal-desc { font-size: 14px; color: #475569; margin-bottom: 20px; line-height: 1.5; text-align: left; }
-        .close-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; width: 100%; transition: 0.2s; }
-        .close-btn:hover { background: #2563eb; }
+        /* === 全新景點詳細彈出視窗樣式 === */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; backdrop-filter: blur(4px); }
+        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 20px; width: 85%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; }
+        .modal-banner { width: 100%; height: 180px; background: #e5e7eb; position: relative; }
+        .modal-banner img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-close-icon { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .modal-body { padding: 20px; overflow-y: auto; max-height: 250px; }
+        .modal-place-name { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px; }
+        .modal-place-rating { font-size: 13px; color: #eab308; font-weight: 500; margin-bottom: 12px; }
+        .modal-place-desc { font-size: 14px; color: #475569; line-height: 1.6; margin: 0; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; gap: 10px; }
+        .btn-nav { flex-grow: 1; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; transition: background 0.2s; }
+        .btn-nav:hover { background: #2563eb; }
 
         @media (max-width: 768px) { 
             .app-container { flex-direction: column; } 
@@ -123,11 +127,22 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="eggModal">
+<div class="modal-overlay" id="detailModal">
     <div class="modal-content">
-        <div class="modal-title" id="eggTitle">標題</div>
-        <div class="modal-desc" id="eggDesc">內容</div>
-        <button class="close-btn" onclick="window.closeEgg()">太棒了，加入行程！</button>
+        <div class="modal-banner">
+            <img id="modalImg" src="" alt="景點圖片">
+            <button class="modal-close-icon" onclick="window.closeDetailModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <h2 class="modal-place-name" id="modalName">景點名稱</h2>
+            <div class="modal-place-rating" id="modalRating">★ 4.5</div>
+            <p class="modal-place-desc" id="modalDesc">詳細介紹載入中...</p>
+        </div>
+        <div class="modal-footer">
+            <a class="btn-nav" id="modalNavBtn" href="" target="_blank">
+                <i class="fa-solid fa-location-arrow"></i> 開始 Google 地圖導航
+            </a>
+        </div>
     </div>
 </div>
 
@@ -152,14 +167,18 @@
 
     function getMyName() { return localStorage.getItem('familyTripName') || ''; }
 
-    // === 彩蛋視窗控制函數 ===
-    window.openEgg = function(title, desc) {
-        document.getElementById('eggTitle').innerText = title;
-        document.getElementById('eggDesc').innerText = desc;
-        document.getElementById('eggModal').style.display = 'block';
+    // === 全局彈出視窗控制函數 ===
+    window.openPlaceModal = function(name, img, rating, desc) {
+        document.getElementById('modalName').innerText = name;
+        document.getElementById('modalImg').src = img;
+        document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
+        document.getElementById('modalDesc').innerText = desc;
+        document.getElementById('modalNavBtn').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+        document.getElementById('detailModal').style.display = 'block';
     };
-    window.closeEgg = function() {
-        document.getElementById('eggModal').style.display = 'none';
+
+    window.closeDetailModal = function() {
+        document.getElementById('detailModal').style.display = 'none';
     };
 
     window.editMsg = function(msgId, oldText, msgOwner) {
@@ -179,13 +198,20 @@
         update(ref(db, 'fund_settings'), { [field]: Number(value) });
     };
 
+    // === 行程資料重構（將彩蛋精準、順路安插在第三天清晨） ===
     const itineraryData = {
-        1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 池上", desc: "第一天啟程！", sections: [ { label: "Morning", places: [ { time: "05:00", name: "台北松山車站", rating: "4.3 ★", desc: "出發走國5接蘇花", img: "https://placehold.co/100x100/bfdbfe/1d4ed8?text=Train", lat: 25.0498, lng: 121.5781 }, { driveTime: "約 2.5 小時", time: "08:30", name: "台泥DAKA園區", rating: "4.2 ★", desc: "休憩補給", img: "https://placehold.co/100x100/d9f99d/4d7c0f?text=DAKA", lat: 24.3090, lng: 121.7538 }, { driveTime: "約 1 小時", time: "10:30", name: "崇德瑩農場", rating: "4.4 ★", desc: "預計停留 2.5 小時", img: "https://placehold.co/100x100/bbf7d0/15803d?text=Farm", lat: 24.1147, lng: 121.6482 } ]}, { label: "Afternoon", places: [ { driveTime: "約 1.5 小時", time: "14:30", name: "富興小火車", rating: "4.6 ★", desc: "需確認營運 <button class='easter-egg-btn' onclick='window.openEgg(\"🎉 發現隱藏秘境：華源海灣！\", \"絕美的天空之鏡和漸層的太平洋海景，千萬別錯過這個絕佳的拍照打卡點喔！(小彩蛋：其實這裡位於台東，我們用魔法提早把它拉進第一天啦！)\")'>🎁</button>", img: "https://placehold.co/100x100/fbcfe8/be185d?text=Train", lat: 23.6300, lng: 121.4320 }, { driveTime: "約 1.5 小時", time: "18:00", name: "悟饕池上飯包", rating: "4.1 ★", desc: "晚餐", img: "https://placehold.co/100x100/fed7aa/c2410c?text=Bento", lat: 23.1235, lng: 121.1965 } ]} ] },
-        2: { date: "2026/07/04 (六)", title: "池上 ➔ 台東", desc: "東台灣自然美景。", sections: [ { label: "Morning", places: [ { time: "05:30", name: "鹿野高台", rating: "4.6 ★", desc: "熱氣球", lat: 22.9130, lng: 121.1205, img: "https://placehold.co/100x100/fecaca/b91c1c?text=Balloon" }, { driveTime: "約 20 分鐘", time: "10:00", name: "初鹿牧場", rating: "4.2 ★", desc: "親近自然 <button class='easter-egg-btn' onclick='window.openEgg(\"🌴 發現隱藏秘境：華源椰林大道！\", \"一條充滿南洋風情的椰林大道，路的盡頭直接連接著蔚藍的太平洋，彷彿走入畫中，是絕美的秘境路線！\")'>✨</button>", lat: 22.8468, lng: 121.0883, img: "https://placehold.co/100x100/bbf7d0/15803d?text=Farm" } ]}, { label: "Afternoon", places: [ { driveTime: "約 30 分鐘", time: "14:00", name: "史前文化博物館", rating: "4.5 ★", desc: "歷史探索", lat: 22.7600, lng: 121.0930, img: "https://placehold.co/100x100/e9d5ff/7e22ce?text=History" } ]} ] },
-        3: { date: "2026/07/05 (日)", title: "台東 ➔ 高雄", desc: "南迴公路海岸線。", sections: [ { label: "Morning", places: [ { time: "08:30", name: "太麻里平交道", rating: "4.3 ★", desc: "櫻木花道", lat: 22.6186, lng: 121.0028, img: "https://placehold.co/100x100/bae6fd/0369a1?text=Crossing" }, { driveTime: "約 15 分鐘", time: "09:20", name: "多良車站", rating: "4.4 ★", desc: "美景車站", lat: 22.5085, lng: 120.9592, img: "https://placehold.co/100x100/99f6e4/0f766e?text=Ocean" }, { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "午餐", lat: 22.4660, lng: 120.4440, img: "https://placehold.co/100x100/fecdd3/be123c?text=Seafood" } ]}, { label: "Afternoon", places: [ { driveTime: "約 1 小時", time: "14:30", name: "壽山動物園", rating: "4.4 ★", desc: "漫步", lat: 22.6395, lng: 120.2760, img: "https://placehold.co/100x100/fde047/854d0e?text=Zoo" }, { driveTime: "約 20 分鐘", time: "17:00", name: "龍虎塔", rating: "4.3 ★", desc: "蓮池潭", lat: 22.6800, lng: 120.2910, img: "https://placehold.co/100x100/c7d2fe/4338ca?text=Tower" } ]} ] },
-        4: { date: "2026/07/06 (一)", title: "高雄 ➔ 台南", desc: "府城美食與古蹟。", sections: [ { label: "Morning", places: [ { time: "11:30", name: "蒸鮮腸粉", rating: "4.3 ★", desc: "港飲", lat: 22.6450, lng: 120.3020, img: "https://placehold.co/100x100/fef08a/a16207?text=Dimsum" } ]}, { label: "Afternoon", places: [ { driveTime: "約 50 分鐘", time: "14:00", name: "奇美博物館", rating: "4.8 ★", desc: "藝術體驗", lat: 22.9345, lng: 120.2260, img: "https://placehold.co/100x100/e2e8f0/475569?text=Museum" }, { driveTime: "約 25 分鐘", time: "16:00", name: "安平古堡", rating: "4.4 ★", desc: "古蹟探索", lat: 23.0016, lng: 120.1606, img: "https://placehold.co/100x100/fdba74/c2410c?text=Old+Street" } ]} ] },
-        5: { date: "2026/07/07 (二)", title: "台南 ➔ 嘉義 ➔ 台中", desc: "嘉義祈福與台中之夜。", sections: [ { label: "Morning", places: [ { time: "09:30", name: "KHTOY旗艦館", rating: "4.8 ★", desc: "玩偶館", lat: 23.5350, lng: 120.4350, img: "https://placehold.co/100x100/fecdd3/be123c?text=KHTOY" } ]}, { label: "Afternoon", places: [ { driveTime: "約 50 分鐘", time: "12:30", name: "竹山紫南宮", rating: "4.7 ★", desc: "祈福", lat: 23.7788, lng: 120.7303, img: "https://placehold.co/100x100/fef08a/a16207?text=Temple" }, { driveTime: "約 1 小時", time: "17:00", name: "激旨燒肉", rating: "4.5 ★", desc: "晚餐", lat: 24.1790, lng: 120.6450, img: "https://placehold.co/100x100/fed7aa/c2410c?text=BBQ" } ]} ] },
-        6: { date: "2026/07/08 (三)", title: "台中 ➔ 台北松山車站", desc: "返程平安到家。", sections: [ { label: "Morning", places: [ { time: "10:00", name: "自然科學博物館", rating: "4.7 ★", desc: "參觀", lat: 24.1533, lng: 120.6695, img: "https://placehold.co/100x100/e9d5ff/7e22ce?text=Science" } ]}, { label: "Afternoon", places: [ { driveTime: "約 2 小時", time: "16:00", name: "台北松山車站", rating: "5.0 ★", desc: "旅途終點", lat: 25.0498, lng: 121.5781, img: "https://placehold.co/100x100/bfdbfe/1d4ed8?text=Station" } ]} ] },
+        1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 池上", desc: "第一天啟程！", sections: [ { label: "Morning", places: [ { time: "05:00", name: "台北松山車站", rating: "4.3 ★", desc: "大夥集合出發！開車走國道5號接蘇花改公路，沿途享受美麗的東海岸日出風光。", img: "https://placehold.co/400x250/bfdbfe/1d4ed8?text=Taipei+Station", lat: 25.0498, lng: 121.5781 }, { driveTime: "約 2.5 小時", time: "08:30", name: "台泥DAKA園區", rating: "4.2 ★", desc: "位於蘇花改進入花蓮的第一站，有星巴克與在地特色市集，是最佳的長途開車補給與伸展休息站。", img: "https://placehold.co/400x250/d9f99d/4d7c0f?text=DAKA+Park", lat: 24.3090, lng: 121.7538 }, { driveTime: "約 1 小時", time: "10:30", name: "崇德瑩農場", rating: "4.4 ★", desc: "擁有台版紐西蘭之稱的遼闊牧場，背山面海，可以看到成群的牛羊、體驗餵小動物，視野極佳。", img: "https://placehold.co/400x250/bbf7d0/15803d?text=Farm", lat: 24.1147, lng: 121.6482 } ]}, { label: "Afternoon", places: [ { driveTime: "約 1.5 小時", time: "14:30", name: "富興小火車", rating: "4.6 ★", desc: "全台第一座有機鳳梨農場，搭乘趣味復古的小火車穿梭在翠綠的鳳梨田與森林綠色隧道之間。", img: "https://placehold.co/400x250/fbcfe8/be185d?text=Pineapple+Train", lat: 23.6300, lng: 121.4320 }, { driveTime: "約 1.5 小時", time: "18:00", name: "悟饕池上飯包", rating: "4.1 ★", desc: "抵達池上後的經典晚餐，可以在充滿懷舊風情的退役火車車廂內，享用香噴噴的在地池上米便當。", img: "https://placehold.co/400x250/fed7aa/c2410c?text=Chishang+Bento", lat: 23.1235, lng: 121.1965 } ]} ] },
+        2: { date: "2026/07/04 (六)", title: "池上 ➔ 台東", desc: "東台灣自然美景。", sections: [ { label: "Morning", places: [ { time: "05:30", name: "鹿野高台", rating: "4.6 ★", desc: "清晨前來觀賞壯觀的國際熱氣球嘉年華，五彩繽紛的熱氣球在縱谷間緩緩升起，是台東最美的夏日經典畫面。", img: "https://placehold.co/400x250/fecaca/b91c1c?text=Hot+Air+Balloon", lat: 22.9130, lng: 121.1205 }, { driveTime: "約 20 分鐘", time: "10:00", name: "初鹿牧場", rating: "4.2 ★", desc: "全台最大的坡地牧場，可以品嚐現擠的濃郁初鹿鮮乳、鮮奶饅頭，並在大片草皮上滑草奔跑。", img: "https://placehold.co/400x250/bbf7d0/15803d?text=Chulu+Ranch", lat: 22.8468, lng: 121.0883 } ]}, { label: "Afternoon", places: [ { driveTime: "約 30 分鐘", time: "14:00", name: "國立臺灣史前文化博物館", rating: "4.5 ★", desc: "全新內部整修落成，吹冷氣躲太陽的好去處。館內互動設施豐富，能深度探索台灣遠古歷史與南島語族文化。", img: "https://placehold.co/400x250/e9d5ff/7e22ce?text=Prehistory+Museum", lat: 22.7600, lng: 121.0930 } ]} ] },
+        3: { date: "2026/07/05 (日)", title: "台東 ➔ 高雄", desc: "南迴公路海岸線，完全順路不走回頭路！", sections: [ { label: "Morning", places: [ 
+            { time: "08:00", name: "華源椰林大道", rating: "4.4 ★", desc: "【秘境彩蛋 🌴】位於太麻里台9線旁的夢幻小路，兩旁高聳入雲的椰子樹筆直延伸，路的盡頭直接連接著蔚藍無垠的太平洋，彷彿一秒置身南洋海島！", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", lat: 22.6480, lng: 121.0142, isEgg: true },
+            { driveTime: "約 2 分鐘", time: "08:15", name: "華源海灣", rating: "4.5 ★", desc: "【秘境彩蛋 🌊】寬闊的沙灘與漸層的太平洋海水藍得不可思議。這裡還有最知名的圓形巨型蓄水池，能拍出絕美、如魔鏡般的「天空之鏡」海景倒影！", img: "https://images.unsplash.com/photo-1473116763269-25541579ff6f?auto=format&fit=crop&w=400&q=80", lat: 22.6417, lng: 121.0114, isEgg: true },
+            { driveTime: "約 5 分鐘", time: "08:35", name: "太麻里平交道", rating: "4.3 ★", desc: "神還原日本動漫《灌籃高手》的經典平交道場景！鐵道、號誌燈配合後方筆直的藍海公路，拍照效果無敵。", img: "https://placehold.co/400x250/bae6fd/0369a1?text=Slam+Dunk+Crossing", lat: 22.6186, lng: 121.0028 }, 
+            { driveTime: "約 15 分鐘", time: "09:20", name: "多良車站", rating: "4.4 ★", desc: "被譽為台灣最美麗的火車站。站在觀景台上，能捕捉紅色鐵欄杆、復古鐵道與漸層太平洋完美交織的絕景。", img: "https://placehold.co/400x250/99f6e4/0f766e?text=Duoliang+Station", lat: 22.5085, lng: 120.9592 }, 
+            { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "抵達屏東東港享用豐盛的海鮮午餐，這是一家連黑鮪魚都非常有名的在地知名老字號餐廳。", img: "https://placehold.co/400x250/fecdd3/be123c?text=Seafood+Lunch", lat: 22.4660, lng: 120.4440 } 
+        ]}, { label: "Afternoon", places: [ { driveTime: "約 1 小時", time: "14:30", name: "壽山動物園", rating: "4.4 ★", desc: "經過改建後的全新壽山動物園，有新穎的天空步道，漫步其中能以不同視角觀察動物，十分舒適。", img: "https://placehold.co/400x250/fde047/854d0e?text=Shoushan+Zoo", lat: 22.6395, lng: 120.2760 }, { driveTime: "約 20 分鐘", time: "17:00", name: "龍虎塔", rating: "4.3 ★", desc: "位於左營蓮池潭的東方傳統幾何高塔，記得要「從龍口入、虎口出」才能消災解厄保平安唷！", img: "https://placehold.co/400x250/c7d2fe/4338ca?text=Dragon+Tiger+Tower", lat: 22.6800, lng: 120.2910 } ]} ] },
+        4: { date: "2026/07/06 (一)", title: "高雄 ➔ 台南", desc: "府城美食與古蹟。", sections: [ { label: "Morning", places: [ { time: "11:30", name: "蒸鮮腸粉", rating: "4.3 ★", desc: "精緻且環境舒適的港式點心，提供美味的腸粉與中式創意小吃，適合作為前往台南前的飽腹首選。", img: "https://placehold.co/400x250/fef08a/a16207?text=Dimsum", lat: 22.6450, lng: 120.3020 } ]}, { label: "Afternoon", places: [ { driveTime: "約 50 分鐘", time: "14:00", name: "奇美博物館", rating: "4.8 ★", desc: "宛如置身歐洲宮殿的希臘風純白建築，館藏豐富，從西洋藝術、兵器到動物標本，兼具知性與拍照美感。", img: "https://placehold.co/400x250/e2e8f0/475569?text=Chimei+Museum", lat: 22.9345, lng: 120.2260 }, { driveTime: "約 25 分鐘", time: "16:00", name: "安平古堡", rating: "4.4 ★", desc: "台灣最古老的紅磚城堡，承載了數百年的歷史記憶。黃昏時分前來漫步、參觀古蹟、順便逛安平老街吃點心。", img: "https://placehold.co/400x250/fdba74/c2410c?text=Anping+Fort", lat: 23.0016, lng: 120.1606 } ]} ] },
+        5: { date: "2026/07/07 (二)", title: "台南 ➔ 嘉義 ➔ 台中", desc: "嘉義祈福與台中之夜。", sections: [ { label: "Morning", places: [ { time: "09:30", name: "KHTOY絨毛玩偶旗艦館", rating: "4.8 ★", desc: "超大超好逛的絨毛娃娃工廠，擁有正版授權的迪士尼、動漫等各式玩偶，超多平價好入手的可愛娃娃。", img: "https://placehold.co/400x250/fecdd3/be123c?text=KHTOY+Doll+House", lat: 23.5350, lng: 120.4350 } ]}, { label: "Afternoon", places: [ { driveTime: "約 50 分鐘", time: "12:30", name: "竹山紫南宮", rating: "4.7 ★", desc: "全台最靈驗的土地公廟之一！大家可以來求發財金、摸金雞，保佑一整年平安順遂，財源滾滾。", img: "https://placehold.co/400x250/fef08a/a16207?text=Zinan+Temple", lat: 23.7788, lng: 120.7303 }, { driveTime: "約 1 小時", time: "17:00", name: "激旨燒肉", rating: "4.5 ★", desc: "逢甲夜市最強露天串燒居酒屋！現場常常有歌手駐唱，搭配炭火直烤的美味肉串與冰涼飲品，氣氛滿分。", img: "https://placehold.co/400x250/fed7aa/c2410c?text=BBQ+Night", lat: 24.1790, lng: 120.6450 } ]} ] },
+        6: { date: "2026/07/08 (三)", title: "台中 ➔ 台北松山車站", desc: "返程平安到家。", sections: [ { label: "Morning", places: [ { time: "10:00", name: "國立自然科學博物館", rating: "4.7 ★", desc: "經典的大型暴龍模型與多元的科學展廳，不管是大人還是小孩都能在這裡獲得滿滿的趣味與新知。", img: "https://placehold.co/400x250/e9d5ff/7e22ce?text=Science+Museum", lat: 24.1533, lng: 120.6695 } ]}, { label: "Afternoon", places: [ { driveTime: "約 2 小時", time: "16:00", name: "台北松山車站", rating: "5.0 ★", desc: "繞完台灣一大圈，終於平安回到旅程的出發起點，滿載美好的環島回憶平安到家！", img: "https://placehold.co/400x250/bfdbfe/1d4ed8?text=Welcome+Home", lat: 25.0498, lng: 121.5781 } ]} ] },
         notes: { title: "注意事項", desc: "旅途提醒：", items: [ { title: "車輛檢查", content: "確認油量胎壓。" }, { title: "預約提醒", content: "熱門景點建議預約。" } ] }
     };
 
@@ -254,7 +280,6 @@
             itineraryData[i].sections.forEach(sec => {
                 sec.places.forEach(p => {
                     allCoords.push([p.lat, p.lng]);
-                    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}`;
                     const marker = L.marker([p.lat, p.lng], {
                         icon: L.divIcon({ 
                             className: '', 
@@ -262,13 +287,10 @@
                         })
                     }).addTo(currentLayerGroup);
                     
-                    marker.bindPopup(`
-                        <div style="font-family:'Noto Sans TC',sans-serif; padding:4px; text-align:center;">
-                            <div style="font-size:11px; color:#3b82f6; font-weight:bold; margin-bottom:2px;">Day ${i}</div>
-                            <h4 style="margin:0 0 8px 0; font-size:13px; color:#111827; font-weight:700;">${p.name}</h4>
-                            <a href="${googleMapsUrl}" target="_blank" style="display:inline-block; background:#3b82f6; color:white; padding:5px 10px; border-radius:12px; font-size:11px; text-decoration:none; font-weight:500;">確認導航 <i class="fa-solid fa-location-arrow"></i></a>
-                        </div>
-                    `);
+                    // 地圖大頭針點擊同樣觸發全新的詳細視窗
+                    marker.on('click', () => {
+                        window.openPlaceModal(p.name, p.img, p.rating, p.desc);
+                    });
                 });
             });
         }
@@ -289,13 +311,16 @@
             sec.places.forEach(p => {
                 if (p.driveTime) html += `<div class="drive-time-line"><i class="fa-solid fa-car-side"></i> ${p.driveTime}</div>`;
                 
-                const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}`;
+                // 安全地將字串裡的單引號替換，避免 JS 報錯
+                const safeDesc = p.desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const eggBadgeHTML = p.isEgg ? `<span class="egg-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> 秘境彩蛋</span>` : '';
+
                 html += `
-                    <div class="place-card">
+                    <div class="place-card" onclick="window.openPlaceModal('${p.name}', '${p.img}', '${p.rating}', '${safeDesc}')">
                         <div class="place-img-wrapper"><img class="place-img" src="${p.img}"></div>
                         <div class="place-info">
-                            <div class="place-time">${p.time}</div>
-                            <a href="${googleMapsUrl}" target="_blank" class="place-name-link"><h3 class="place-name">${p.name} <i class="fa-solid fa-location-arrow map-icon"></i></h3></a>
+                            <div class="place-time">${p.time} ${eggBadgeHTML}</div>
+                            <h3 class="place-name">${p.name}</h3>
                             <div class="place-rating">${p.rating}</div>
                             <div class="place-desc">${p.desc}</div>
                         </div>
@@ -308,12 +333,9 @@
                     })
                 }).addTo(currentLayerGroup);
 
-                marker.bindPopup(`
-                    <div style="font-family:'Noto Sans TC',sans-serif; padding:4px; text-align:center;">
-                        <h4 style="margin:0 0 8px 0; font-size:14px; color:#111827; font-weight:700;">${p.name}</h4>
-                        <a href="${googleMapsUrl}" target="_blank" style="display:inline-block; background:#3b82f6; color:white; padding:6px 12px; border-radius:12px; font-size:12px; text-decoration:none; font-weight:500;">確認導航 <i class="fa-solid fa-location-arrow"></i></a>
-                    </div>
-                `);
+                marker.on('click', () => {
+                    window.openPlaceModal(p.name, p.img, p.rating, p.desc);
+                });
 
                 coords.push([p.lat, p.lng]);
                 markerIndex++;
@@ -399,7 +421,6 @@
             let name = currentNameInput.value.trim();
             const text = document.getElementById('msgInput').value.trim();
             
-            // 系統密技：查詢所有留過名字的人 (支援半形與全形斜線)
             if (text === '//名單' || text === '／／名單') {
                 get(ref(db, 'messages')).then(snap1 => {
                     const users = new Set();
@@ -415,7 +436,7 @@
                     });
                 });
                 document.getElementById('msgInput').value = '';
-                return; // <--- 這裡的 return 會直接中斷，不會把字傳送出去
+                return;
             }
 
             if (!name) { alert("請先輸入你的名字喔！"); currentNameInput.focus(); return; }
