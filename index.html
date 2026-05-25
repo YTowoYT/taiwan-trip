@@ -90,6 +90,16 @@
         .summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 6px; }
         .summary-grand-total { font-weight: bold; font-size: 18px; color: #b91c1c; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; }
         
+        /* === 彩蛋動畫與視窗樣式 === */
+        .easter-egg-btn { background: none; border: none; font-size: 1.2em; cursor: pointer; margin-left: 6px; animation: bounce 2s infinite; padding: 0; vertical-align: middle; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-8px);} 60% {transform: translateY(-4px);} }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; backdrop-filter: blur(2px); }
+        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 16px; text-align: center; width: 80%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-title { color: #e74c3c; font-size: 18px; font-weight: bold; margin-bottom: 12px; }
+        .modal-desc { font-size: 14px; color: #475569; margin-bottom: 20px; line-height: 1.5; text-align: left; }
+        .close-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; width: 100%; transition: 0.2s; }
+        .close-btn:hover { background: #2563eb; }
+
         @media (max-width: 768px) { 
             .app-container { flex-direction: column; } 
             .map-area { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 1; }
@@ -110,6 +120,14 @@
     <div class="side-panel" id="sidePanel">
         <div class="drag-handle-area" id="dragHandle"><div class="drag-handle"></div></div>
         <div class="panel-content" id="panelContent"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="eggModal">
+    <div class="modal-content">
+        <div class="modal-title" id="eggTitle">標題</div>
+        <div class="modal-desc" id="eggDesc">內容</div>
+        <button class="close-btn" onclick="window.closeEgg()">太棒了，加入行程！</button>
     </div>
 </div>
 
@@ -134,6 +152,16 @@
 
     function getMyName() { return localStorage.getItem('familyTripName') || ''; }
 
+    // === 彩蛋視窗控制函數 ===
+    window.openEgg = function(title, desc) {
+        document.getElementById('eggTitle').innerText = title;
+        document.getElementById('eggDesc').innerText = desc;
+        document.getElementById('eggModal').style.display = 'block';
+    };
+    window.closeEgg = function() {
+        document.getElementById('eggModal').style.display = 'none';
+    };
+
     window.editMsg = function(msgId, oldText, msgOwner) {
         if (msgOwner !== getMyName()) { alert("你只能編輯自己的留言喔！"); return; }
         const newText = prompt("請輸入修改後的訊息：", oldText);
@@ -152,8 +180,8 @@
     };
 
     const itineraryData = {
-        1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 池上", desc: "第一天啟程！", sections: [ { label: "Morning", places: [ { time: "05:00", name: "台北松山車站", rating: "4.3 ★", desc: "出發走國5接蘇花", img: "https://placehold.co/100x100/bfdbfe/1d4ed8?text=Train", lat: 25.0498, lng: 121.5781 }, { driveTime: "約 2.5 小時", time: "08:30", name: "台泥DAKA園區", rating: "4.2 ★", desc: "休憩補給", img: "https://placehold.co/100x100/d9f99d/4d7c0f?text=DAKA", lat: 24.3090, lng: 121.7538 }, { driveTime: "約 1 小時", time: "10:30", name: "崇德瑩農場", rating: "4.4 ★", desc: "預計停留 2.5 小時", img: "https://placehold.co/100x100/bbf7d0/15803d?text=Farm", lat: 24.1147, lng: 121.6482 } ]}, { label: "Afternoon", places: [ { driveTime: "約 1.5 小時", time: "14:30", name: "富興小火車", rating: "4.6 ★", desc: "需確認營運", img: "https://placehold.co/100x100/fbcfe8/be185d?text=Train", lat: 23.6300, lng: 121.4320 }, { driveTime: "約 1.5 小時", time: "18:00", name: "悟饕池上飯包", rating: "4.1 ★", desc: "晚餐", img: "https://placehold.co/100x100/fed7aa/c2410c?text=Bento", lat: 23.1235, lng: 121.1965 } ]} ] },
-        2: { date: "2026/07/04 (六)", title: "池上 ➔ 台東", desc: "東台灣自然美景。", sections: [ { label: "Morning", places: [ { time: "05:30", name: "鹿野高台", rating: "4.6 ★", desc: "熱氣球", lat: 22.9130, lng: 121.1205, img: "https://placehold.co/100x100/fecaca/b91c1c?text=Balloon" }, { driveTime: "約 20 分鐘", time: "10:00", name: "初鹿牧場", rating: "4.2 ★", desc: "親近自然", lat: 22.8468, lng: 121.0883, img: "https://placehold.co/100x100/bbf7d0/15803d?text=Farm" } ]}, { label: "Afternoon", places: [ { driveTime: "約 30 分鐘", time: "14:00", name: "史前文化博物館", rating: "4.5 ★", desc: "歷史探索", lat: 22.7600, lng: 121.0930, img: "https://placehold.co/100x100/e9d5ff/7e22ce?text=History" } ]} ] },
+        1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 池上", desc: "第一天啟程！", sections: [ { label: "Morning", places: [ { time: "05:00", name: "台北松山車站", rating: "4.3 ★", desc: "出發走國5接蘇花", img: "https://placehold.co/100x100/bfdbfe/1d4ed8?text=Train", lat: 25.0498, lng: 121.5781 }, { driveTime: "約 2.5 小時", time: "08:30", name: "台泥DAKA園區", rating: "4.2 ★", desc: "休憩補給", img: "https://placehold.co/100x100/d9f99d/4d7c0f?text=DAKA", lat: 24.3090, lng: 121.7538 }, { driveTime: "約 1 小時", time: "10:30", name: "崇德瑩農場", rating: "4.4 ★", desc: "預計停留 2.5 小時", img: "https://placehold.co/100x100/bbf7d0/15803d?text=Farm", lat: 24.1147, lng: 121.6482 } ]}, { label: "Afternoon", places: [ { driveTime: "約 1.5 小時", time: "14:30", name: "富興小火車", rating: "4.6 ★", desc: "需確認營運 <button class='easter-egg-btn' onclick='window.openEgg(\"🎉 發現隱藏秘境：華源海灣！\", \"絕美的天空之鏡和漸層的太平洋海景，千萬別錯過這個絕佳的拍照打卡點喔！(小彩蛋：其實這裡位於台東，我們用魔法提早把它拉進第一天啦！)\")'>🎁</button>", img: "https://placehold.co/100x100/fbcfe8/be185d?text=Train", lat: 23.6300, lng: 121.4320 }, { driveTime: "約 1.5 小時", time: "18:00", name: "悟饕池上飯包", rating: "4.1 ★", desc: "晚餐", img: "https://placehold.co/100x100/fed7aa/c2410c?text=Bento", lat: 23.1235, lng: 121.1965 } ]} ] },
+        2: { date: "2026/07/04 (六)", title: "池上 ➔ 台東", desc: "東台灣自然美景。", sections: [ { label: "Morning", places: [ { time: "05:30", name: "鹿野高台", rating: "4.6 ★", desc: "熱氣球", lat: 22.9130, lng: 121.1205, img: "https://placehold.co/100x100/fecaca/b91c1c?text=Balloon" }, { driveTime: "約 20 分鐘", time: "10:00", name: "初鹿牧場", rating: "4.2 ★", desc: "親近自然 <button class='easter-egg-btn' onclick='window.openEgg(\"🌴 發現隱藏秘境：華源椰林大道！\", \"一條充滿南洋風情的椰林大道，路的盡頭直接連接著蔚藍的太平洋，彷彿走入畫中，是絕美的秘境路線！\")'>✨</button>", lat: 22.8468, lng: 121.0883, img: "https://placehold.co/100x100/bbf7d0/15803d?text=Farm" } ]}, { label: "Afternoon", places: [ { driveTime: "約 30 分鐘", time: "14:00", name: "史前文化博物館", rating: "4.5 ★", desc: "歷史探索", lat: 22.7600, lng: 121.0930, img: "https://placehold.co/100x100/e9d5ff/7e22ce?text=History" } ]} ] },
         3: { date: "2026/07/05 (日)", title: "台東 ➔ 高雄", desc: "南迴公路海岸線。", sections: [ { label: "Morning", places: [ { time: "08:30", name: "太麻里平交道", rating: "4.3 ★", desc: "櫻木花道", lat: 22.6186, lng: 121.0028, img: "https://placehold.co/100x100/bae6fd/0369a1?text=Crossing" }, { driveTime: "約 15 分鐘", time: "09:20", name: "多良車站", rating: "4.4 ★", desc: "美景車站", lat: 22.5085, lng: 120.9592, img: "https://placehold.co/100x100/99f6e4/0f766e?text=Ocean" }, { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "午餐", lat: 22.4660, lng: 120.4440, img: "https://placehold.co/100x100/fecdd3/be123c?text=Seafood" } ]}, { label: "Afternoon", places: [ { driveTime: "約 1 小時", time: "14:30", name: "壽山動物園", rating: "4.4 ★", desc: "漫步", lat: 22.6395, lng: 120.2760, img: "https://placehold.co/100x100/fde047/854d0e?text=Zoo" }, { driveTime: "約 20 分鐘", time: "17:00", name: "龍虎塔", rating: "4.3 ★", desc: "蓮池潭", lat: 22.6800, lng: 120.2910, img: "https://placehold.co/100x100/c7d2fe/4338ca?text=Tower" } ]} ] },
         4: { date: "2026/07/06 (一)", title: "高雄 ➔ 台南", desc: "府城美食與古蹟。", sections: [ { label: "Morning", places: [ { time: "11:30", name: "蒸鮮腸粉", rating: "4.3 ★", desc: "港飲", lat: 22.6450, lng: 120.3020, img: "https://placehold.co/100x100/fef08a/a16207?text=Dimsum" } ]}, { label: "Afternoon", places: [ { driveTime: "約 50 分鐘", time: "14:00", name: "奇美博物館", rating: "4.8 ★", desc: "藝術體驗", lat: 22.9345, lng: 120.2260, img: "https://placehold.co/100x100/e2e8f0/475569?text=Museum" }, { driveTime: "約 25 分鐘", time: "16:00", name: "安平古堡", rating: "4.4 ★", desc: "古蹟探索", lat: 23.0016, lng: 120.1606, img: "https://placehold.co/100x100/fdba74/c2410c?text=Old+Street" } ]} ] },
         5: { date: "2026/07/07 (二)", title: "台南 ➔ 嘉義 ➔ 台中", desc: "嘉義祈福與台中之夜。", sections: [ { label: "Morning", places: [ { time: "09:30", name: "KHTOY旗艦館", rating: "4.8 ★", desc: "玩偶館", lat: 23.5350, lng: 120.4350, img: "https://placehold.co/100x100/fecdd3/be123c?text=KHTOY" } ]}, { label: "Afternoon", places: [ { driveTime: "約 50 分鐘", time: "12:30", name: "竹山紫南宮", rating: "4.7 ★", desc: "祈福", lat: 23.7788, lng: 120.7303, img: "https://placehold.co/100x100/fef08a/a16207?text=Temple" }, { driveTime: "約 1 小時", time: "17:00", name: "激旨燒肉", rating: "4.5 ★", desc: "晚餐", lat: 24.1790, lng: 120.6450, img: "https://placehold.co/100x100/fed7aa/c2410c?text=BBQ" } ]} ] },
