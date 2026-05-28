@@ -75,7 +75,6 @@
         #msgInput { flex-grow: 1; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 20px; font-size: 14px; outline: none; }
         #sendBtn { background: #3b82f6; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; transition: 0.2s; }
         
-        /* === 記帳區與按鈕優化 === */
         #addExpBtn { background: #dc2626; color: white; border: none; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; flex-shrink: 0; transition: 0.2s; }
         #addExpBtn:hover { background: #b91c1c; }
 
@@ -101,7 +100,13 @@
         
         .modal-banner { width: 100%; height: 180px; background: #e5e7eb; position: relative; }
         .modal-banner img { width: 100%; height: 100%; object-fit: cover; }
-        .modal-close-icon { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        
+        /* 關閉視窗按鈕 (右上角) */
+        .modal-close-icon { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 10; }
+        
+        /* 更換圖片按鈕 (左上角) */
+        .modal-edit-img-icon { position: absolute; top: 12px; left: 12px; background: #facc15; color: #854d0e; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+
         .modal-body { padding: 20px; overflow-y: auto; max-height: 250px; }
         .modal-place-name { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px; }
         .modal-place-rating { font-size: 13px; color: #eab308; font-weight: 500; margin-bottom: 12px; }
@@ -110,13 +115,10 @@
         .btn-nav { flex-grow: 1; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; transition: background 0.2s; }
         .btn-nav:hover { background: #2563eb; }
 
-        /* === 捲簾式拖曳面板 (Bottom Sheet) 專屬樣式 === */
         @media (max-width: 768px) { 
             .app-container { flex-direction: column; } 
             .map-area { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 1; }
             .top-nav { z-index: 5; }
-            
-            /* 面板改為固定於頂部向下偏移，透過 transform 控制高度 */
             .side-panel { 
                 position: absolute; 
                 top: 50px; 
@@ -148,6 +150,7 @@
     <div class="modal-content">
         <div class="modal-banner">
             <img id="modalImg" src="" alt="景點圖片">
+            <button class="modal-edit-img-icon" id="modalEditImgBtn" onclick="window.changePlaceImage()"><i class="fa-solid fa-pen"></i></button>
             <button class="modal-close-icon" onclick="window.closeDetailModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
@@ -195,7 +198,15 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // === 捲簾式拖曳邏輯 (Bottom Sheet) ===
+    // === 動態圖片系統 (從 Firebase 讀取大家自訂的圖片) ===
+    window.customImages = {};
+    window.currentViewDay = 1;
+    const imgRef = ref(db, 'custom_images');
+    onValue(imgRef, (snap) => {
+        window.customImages = snap.val() || {};
+        if(window.currentViewDay) renderDay(window.currentViewDay);
+    });
+
     const sidePanel = document.getElementById('sidePanel');
     const dragHandle = document.getElementById('dragHandle');
     let startY = 0;
@@ -204,7 +215,7 @@
     
     function setInitialMobilePanel() {
         if(window.innerWidth <= 768) {
-            currentTranslateY = window.innerHeight * 0.45; // 預設顯示一半
+            currentTranslateY = window.innerHeight * 0.45; 
             sidePanel.style.transform = `translateY(${currentTranslateY}px)`;
             sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
         } else {
@@ -217,7 +228,7 @@
     dragHandle.addEventListener('touchstart', e => { 
         if(window.innerWidth > 768) return;
         startY = e.touches[0].clientY; 
-        sidePanel.style.transition = 'none'; // 拖曳時取消動畫，讓面板緊跟手指
+        sidePanel.style.transition = 'none'; 
         isDragging = true;
     }, {passive: true});
 
@@ -226,8 +237,8 @@
         let deltaY = e.touches[0].clientY - startY;
         let newTranslateY = currentTranslateY + deltaY;
         
-        let maxTranslate = window.innerHeight * 0.80; // 往下推到底部的極限
-        if (newTranslateY < 0) newTranslateY = 0; // 往上拉到頂部的極限
+        let maxTranslate = window.innerHeight * 0.80; 
+        if (newTranslateY < 0) newTranslateY = 0; 
         if (newTranslateY > maxTranslate) newTranslateY = maxTranslate;
         
         sidePanel.style.transform = `translateY(${newTranslateY}px)`;
@@ -247,7 +258,6 @@
 
         sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
         
-        // 自動吸附的三個高度點：全開(Top)、半開(Mid)、收起(Bot)
         let snapTop = 0;
         let snapMid = vh * 0.45;
         let snapBot = vh * 0.80;
@@ -256,7 +266,6 @@
         let diffMid = Math.abs(currentTranslateY - snapMid);
         let diffBot = Math.abs(currentTranslateY - snapBot);
         
-        // 尋找最近的吸附點
         let targetTranslate = snapMid;
         if (diffTop < diffMid && diffTop < diffBot) targetTranslate = snapTop;
         else if (diffBot < diffMid && diffBot < diffTop) targetTranslate = snapBot;
@@ -267,15 +276,26 @@
 
     function getMyName() { return localStorage.getItem('familyTripName') || ''; }
 
-    window.openPlaceModal = function(name, img, rating, desc) {
+    window.openPlaceModal = function(name, defaultImg, rating, desc) {
+        window.currentModalPlace = name; // 記住目前打開的是哪個景點，方便更換圖片
+        const finalImg = window.customImages[name] || defaultImg;
         document.getElementById('modalName').innerText = name;
-        document.getElementById('modalImg').src = img;
+        document.getElementById('modalImg').src = finalImg;
         document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
         document.getElementById('modalDesc').innerText = desc;
         document.getElementById('modalNavBtn').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
         document.getElementById('detailModal').style.display = 'flex';
     };
     window.closeDetailModal = function() { document.getElementById('detailModal').style.display = 'none'; };
+
+    // === 網頁上直接更換圖片的神奇功能 ===
+    window.changePlaceImage = function() {
+        let newUrl = prompt("請貼上新的圖片網址 (結尾通常是 .jpg 或 .png)：\n\n小提示：你可以在 Google 圖片長按喜歡的照片，選擇「複製圖片連結」。");
+        if (newUrl !== null && newUrl.trim() !== "") {
+            update(ref(db, 'custom_images'), { [window.currentModalPlace]: newUrl.trim() });
+            document.getElementById('modalImg').src = newUrl.trim();
+        }
+    };
 
     window.day3EggAdded = false;
     window.openEggModal = function() { document.getElementById('eggModal').style.display = 'flex'; };
@@ -310,7 +330,6 @@
         update(ref(db, 'fund_settings'), { [field]: Number(value) });
     };
 
-    // === 行程資料庫 (保證無貓咪！全景點真實高畫質美圖版) ===
     const itineraryData = {
         1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 台東", desc: "第一天啟程與初鹿牧場！", sections: [ 
             { label: "Morning", places: [ 
@@ -414,7 +433,6 @@
         document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active')); 
         el.classList.add('active'); 
         
-        // 若在手機版，切換選單時自動把捲簾展開到一半，方便閱讀
         if(window.innerWidth <= 768) {
             currentTranslateY = window.innerHeight * 0.45;
             sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
@@ -448,6 +466,7 @@
     }
     
     function renderDay(day) {
+        window.currentViewDay = day;
         const data = itineraryData[day];
         let html = `<div class="day-label">DAY ${day} <span class="day-date">${data.date}</span></div><h1 class="route-title">${data.title}</h1><p class="route-desc">${data.desc}</p>`;
         const coords = [];
@@ -468,10 +487,13 @@
                 
                 const safeDesc = p.desc.replace(/'/g, "\\'").replace(/"/g, '"');
                 const eggBadgeHTML = p.isEgg ? `<span class="egg-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> 秘境彩蛋</span>` : '';
+                
+                // 從 Firebase 讀取大家自訂的圖片，沒有的話才用預設的
+                const finalImg = window.customImages[p.name] || p.img;
 
                 html += `
                     <div class="place-card" onclick="window.openPlaceModal('${p.name}', '${p.img}', '${p.rating}', '${safeDesc}')">
-                        <div class="place-img-wrapper"><img class="place-img" src="${p.img}"></div>
+                        <div class="place-img-wrapper"><img class="place-img" src="${finalImg}"></div>
                         <div class="place-info">
                             <div class="place-time">${p.time} ${eggBadgeHTML}</div>
                             <h3 class="place-name">${p.name}</h3>
@@ -503,6 +525,7 @@
     }
     
     function renderNotes() {
+        window.currentViewDay = null;
         const data = itineraryData.notes;
         let html = `<div class="day-label" style="color:#ca8a04;">IMPORTANT</div><h1 class="route-title">${data.title}</h1><ul class="notes-list">${data.items.map(i => `<li><strong>${i.title}</strong>${i.content}</li>`).join('')}</ul>`;
         document.getElementById('panelContent').innerHTML = html;
@@ -510,6 +533,7 @@
     }
     
     function renderChat() {
+        window.currentViewDay = null;
         let html = `
             <div class="day-label" style="color:#166534; margin-top:0;">LIVE CHAT</div>
             <h1 class="route-title" style="margin-bottom:0;">互動留言板</h1>
@@ -599,6 +623,7 @@
     }
 
     function renderAccounting() {
+        window.currentViewDay = null;
         let html = `
             <div class="day-label" style="color:#991b1b; margin-top:0;">ACCOUNTING</div>
             <h1 class="route-title" style="margin-bottom:0;">公積金記帳區</h1>
