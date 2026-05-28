@@ -28,7 +28,7 @@
         .nav-pill.acc-btn.active { background: #dc2626; color: white; }
         
         .side-panel { width: 380px; background: white; height: calc(100% - 40px); margin: 20px 20px 20px 0; border-radius: 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; overflow: hidden; }
-        .drag-handle-area { display: none; width: 100%; height: 24px; background: white; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; z-index: 20; }
+        .drag-handle-area { display: none; width: 100%; height: 24px; background: white; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; z-index: 20; touch-action: none; }
         .drag-handle { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
         .panel-content { padding: 0 24px 24px 24px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; }
         
@@ -81,7 +81,6 @@
 
         .fund-status { padding: 16px; border-radius: 12px; margin-bottom: 16px; font-weight: bold; text-align: center; font-size: 16px; display: flex; flex-direction: column; gap: 4px; transition: background-color 0.3s; }
         .fund-status.good { background-color: #1e3a8a; color: #fde047; }
-        /* 確保低於 1/3 時絕對顯示紅底黃字 */
         .fund-status.warning { background-color: #b91c1c !important; color: #fde047 !important; box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3); } 
 
         .expense-group { margin-bottom: 16px; }
@@ -95,7 +94,6 @@
         .summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 6px; }
         .summary-grand-total { font-weight: bold; font-size: 18px; color: #b91c1c; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; }
         
-        /* 釋放滑動空間，讓白底記帳區塊可以順暢拖曳滑動 */
         #expenseListArea { flex-grow: 1; overflow-y: auto; max-height: 55vh; padding-bottom: 30px; border-bottom: 1px solid #e2e8f0; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; backdrop-filter: blur(4px); justify-content: center; align-items: center; }
@@ -112,14 +110,25 @@
         .btn-nav { flex-grow: 1; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; transition: background 0.2s; }
         .btn-nav:hover { background: #2563eb; }
 
+        /* === 捲簾式拖曳面板 (Bottom Sheet) 專屬樣式 === */
         @media (max-width: 768px) { 
             .app-container { flex-direction: column; } 
             .map-area { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 1; }
             .top-nav { z-index: 5; }
-            .side-panel { position: absolute; bottom: 0; width: 100%; height: 50dvh; margin: 0; border-radius: 20px 20px 0 0; z-index: 1000; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-            .drag-handle-area { display: flex; } 
+            
+            /* 面板改為固定於頂部向下偏移，透過 transform 控制高度 */
+            .side-panel { 
+                position: absolute; 
+                top: 50px; 
+                height: calc(100dvh - 50px); 
+                width: 100%; 
+                margin: 0; 
+                border-radius: 24px 24px 0 0; 
+                z-index: 1000; 
+                box-shadow: 0 -5px 25px rgba(0,0,0,0.2);
+            }
+            .drag-handle-area { display: flex; padding: 12px 0; } 
             .panel-content { padding-top: 0; }
-            .side-panel.collapsed { transform: translateY(calc(100% - 30px)); }
         }
     </style>
 </head>
@@ -186,6 +195,76 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // === 捲簾式拖曳邏輯 (Bottom Sheet) ===
+    const sidePanel = document.getElementById('sidePanel');
+    const dragHandle = document.getElementById('dragHandle');
+    let startY = 0;
+    let currentTranslateY = 0;
+    let isDragging = false;
+    
+    function setInitialMobilePanel() {
+        if(window.innerWidth <= 768) {
+            currentTranslateY = window.innerHeight * 0.45; // 預設顯示一半
+            sidePanel.style.transform = `translateY(${currentTranslateY}px)`;
+            sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        } else {
+            sidePanel.style.transform = 'none';
+        }
+    }
+    window.addEventListener('resize', setInitialMobilePanel);
+    setInitialMobilePanel();
+
+    dragHandle.addEventListener('touchstart', e => { 
+        if(window.innerWidth > 768) return;
+        startY = e.touches[0].clientY; 
+        sidePanel.style.transition = 'none'; // 拖曳時取消動畫，讓面板緊跟手指
+        isDragging = true;
+    }, {passive: true});
+
+    document.addEventListener('touchmove', e => {
+        if (!isDragging) return;
+        let deltaY = e.touches[0].clientY - startY;
+        let newTranslateY = currentTranslateY + deltaY;
+        
+        let maxTranslate = window.innerHeight * 0.80; // 往下推到底部的極限
+        if (newTranslateY < 0) newTranslateY = 0; // 往上拉到頂部的極限
+        if (newTranslateY > maxTranslate) newTranslateY = maxTranslate;
+        
+        sidePanel.style.transform = `translateY(${newTranslateY}px)`;
+    }, {passive: true});
+
+    document.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        let deltaY = e.changedTouches[0].clientY - startY;
+        currentTranslateY += deltaY;
+        
+        let vh = window.innerHeight;
+        let maxTranslate = vh * 0.80;
+        if (currentTranslateY < 0) currentTranslateY = 0;
+        if (currentTranslateY > maxTranslate) currentTranslateY = maxTranslate;
+
+        sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        
+        // 自動吸附的三個高度點：全開(Top)、半開(Mid)、收起(Bot)
+        let snapTop = 0;
+        let snapMid = vh * 0.45;
+        let snapBot = vh * 0.80;
+        
+        let diffTop = Math.abs(currentTranslateY - snapTop);
+        let diffMid = Math.abs(currentTranslateY - snapMid);
+        let diffBot = Math.abs(currentTranslateY - snapBot);
+        
+        // 尋找最近的吸附點
+        let targetTranslate = snapMid;
+        if (diffTop < diffMid && diffTop < diffBot) targetTranslate = snapTop;
+        else if (diffBot < diffMid && diffBot < diffTop) targetTranslate = snapBot;
+        
+        currentTranslateY = targetTranslate;
+        sidePanel.style.transform = `translateY(${currentTranslateY}px)`;
+    });
+
     function getMyName() { return localStorage.getItem('familyTripName') || ''; }
 
     window.openPlaceModal = function(name, img, rating, desc) {
@@ -206,9 +285,9 @@
         document.getElementById('eggModal').style.display = 'none';
         itineraryData[3].sections[0].places = [
             { time: "08:00", name: "華源椰林大道", rating: "4.4 ★", desc: "【秘境彩蛋 🌴】位於太麻里台9線旁的夢幻小路，兩旁高聳入雲的椰子樹筆直延伸，路的盡頭直接連接著蔚藍無垠的太平洋，彷彿一秒置身南洋海島！", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", lat: 22.6480, lng: 121.0142, isEgg: true },
-            { driveTime: "約 2 分鐘", time: "08:15", name: "華源海灣", rating: "4.5 ★", desc: "【秘境彩蛋 🌊】寬闊的沙灘與漸層的太平洋海水藍得不可思議。這裡還有最知名的圓形巨型蓄水池，能拍出絕美、如魔鏡般的「天空之鏡」海景倒影！", img: "https://images.unsplash.com/photo-1473116763269-25541579ff6f?auto=format&fit=crop&w=400&q=80", lat: 22.6417, lng: 121.0114, isEgg: true },
-            { driveTime: "約 10 分鐘", time: "09:00", name: "太麻里平交道", rating: "4.3 ★", desc: "神還原日本動漫《灌籃高手》的經典平交道場景！鐵道、號誌燈配合後方筆直的藍海公路，拍照效果無敵。", img: "https://images.unsplash.com/photo-1515002246390-7bf7e8f87b54?auto=format&fit=crop&w=400&q=80", lat: 22.6186, lng: 121.0028 }, 
-            { driveTime: "約 15 分鐘", time: "09:40", name: "多良車站", rating: "4.4 ★", desc: "被譽為台灣最美麗的火車站。站在觀景台上，能捕捉紅色鐵欄杆、復古鐵道與漸層太平洋完美交織的絕景。", img: "https://images.unsplash.com/photo-1616035255476-857cb3e0a2d5?auto=format&fit=crop&w=400&q=80", lat: 22.5085, lng: 120.9592 }, 
+            { driveTime: "約 2 分鐘", time: "08:15", name: "華源海灣", rating: "4.5 ★", desc: "【秘境彩蛋 🌊】寬闊的沙灘與漸層的太平洋海水藍得不可思議。這裡還有最知名的圓形巨型蓄水池，能拍出絕美、如魔鏡般的「天空之鏡」海景倒影！", img: "https://images.unsplash.com/photo-1518998053401-878c73fd6e66?auto=format&fit=crop&w=400&q=80", lat: 22.6417, lng: 121.0114, isEgg: true },
+            { driveTime: "約 10 分鐘", time: "09:00", name: "太麻里平交道", rating: "4.3 ★", desc: "神還原日本動漫《灌籃高手》的經典平交道場景！鐵道、號誌燈配合後方筆直的藍海公路，拍照效果無敵。", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 22.6186, lng: 121.0028 }, 
+            { driveTime: "約 15 分鐘", time: "09:40", name: "多良車站", rating: "4.4 ★", desc: "被譽為台灣最美麗的火車站。站在觀景台上，能捕捉紅色鐵欄杆、復古鐵道與漸層太平洋完美交織的絕景。", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", lat: 22.5085, lng: 120.9592 }, 
             { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "抵達屏東東港享用豐盛的海鮮午餐，這是一家連黑鮪魚都非常有名的在地知名老字號餐廳。", img: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=400&q=80", lat: 22.4660, lng: 120.4440 }
         ];
         renderDay(3);
@@ -231,51 +310,51 @@
         update(ref(db, 'fund_settings'), { [field]: Number(value) });
     };
 
-    // === 行程資料庫 (全景點真實高畫質美圖版) ===
+    // === 行程資料庫 (保證無貓咪！全景點真實高畫質美圖版) ===
     const itineraryData = {
         1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 台東", desc: "第一天啟程與初鹿牧場！", sections: [ 
             { label: "Morning", places: [ 
                 { time: "05:00", name: "台北松山車站", rating: "4.3 ★", desc: "大夥集合出發！開車走國道5號接蘇花改公路，沿途享受美麗的東海岸日出風光。", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 25.0498, lng: 121.5781 }, 
                 { driveTime: "約 2.5 小時", time: "08:30", name: "台泥DAKA園區", rating: "4.2 ★", desc: "位於蘇花改進入花蓮的第一站，有星巴克與在地特色市集，是最佳的長途開車補給與伸展休息站。", img: "https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=400&q=80", lat: 24.3090, lng: 121.7538 }, 
-                { driveTime: "約 1 小時", time: "10:30", name: "崇德瑩農場", rating: "4.4 ★", desc: "擁有台版紐西蘭之稱的遼闊牧場，背山面海，可以看到成群的牛羊、體驗餵小動物，視野極佳。", img: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=400&q=80", lat: 24.1147, lng: 121.6482 } 
+                { driveTime: "約 1 小時", time: "10:30", name: "崇德瑩農場", rating: "4.4 ★", desc: "擁有台版紐西蘭之稱的遼闊牧場，背山面海，可以看到成群的牛羊、體驗餵小動物，視野極佳。", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80", lat: 24.1147, lng: 121.6482 } 
             ]}, 
             { label: "Afternoon", places: [ 
-                { driveTime: "約 1.5 小時", time: "13:30", name: "富興小火車", rating: "4.6 ★", desc: "全台第一座有機鳳梨農場，搭乘趣味復古的小火車穿梭在翠綠的鳳梨田與森林綠色隧道之間。", img: "https://images.unsplash.com/photo-1569074187119-c87815b476da?auto=format&fit=crop&w=400&q=80", lat: 23.6300, lng: 121.4320 }, 
-                { driveTime: "約 1 小時", time: "15:00", name: "悟饕池上飯包", rating: "4.1 ★", desc: "抵達池上稍作休息，在充滿懷舊風情的退役火車車廂內，享用香噴噴的在地池上米便當當作下午茶/早晚餐。", img: "https://images.unsplash.com/photo-1627308595229-7830f5c92f44?auto=format&fit=crop&w=400&q=80", lat: 23.1235, lng: 121.1965 },
-                { driveTime: "約 45 分鐘", time: "16:15", name: "初鹿牧場", rating: "4.2 ★", desc: "趁著傍晚關園前，抵達全台最大的坡地牧場，品嚐現擠的濃郁初鹿鮮乳、鮮奶饅頭，並在大片草皮上放鬆。", img: "https://images.unsplash.com/photo-1542385151-efd9000785a0?auto=format&fit=crop&w=400&q=80", lat: 22.8468, lng: 121.0883 },
+                { driveTime: "約 1.5 小時", time: "13:30", name: "富興小火車", rating: "4.6 ★", desc: "全台第一座有機鳳梨農場，搭乘趣味復古的小火車穿梭在翠綠的鳳梨田與森林綠色隧道之間。", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 23.6300, lng: 121.4320 }, 
+                { driveTime: "約 1 小時", time: "15:00", name: "悟饕池上飯包", rating: "4.1 ★", desc: "抵達池上稍作休息，在充滿懷舊風情的退役火車車廂內，享用香噴噴的在地池上米便當當作下午茶/早晚餐。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 23.1235, lng: 121.1965 },
+                { driveTime: "約 45 分鐘", time: "16:15", name: "初鹿牧場", rating: "4.2 ★", desc: "趁著傍晚關園前，抵達全台最大的坡地牧場，品嚐現擠的濃郁初鹿鮮乳、鮮奶饅頭，並在大片草皮上放鬆。", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80", lat: 22.8468, lng: 121.0883 },
                 { driveTime: "約 30 分鐘", time: "17:30", name: "娜路彎銀河酒店", rating: "4.3 ★", desc: "第一晚下榻飯店！好好洗澡休息，準備迎接明天凌晨的熱氣球超早起行程！", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 22.7758, lng: 121.1242 }
             ]} 
         ] },
         2: { date: "2026/07/04 (六)", title: "熱氣球 ➔ 飯店補眠 ➔ 博物館", desc: "早起追熱氣球，下午知性避暑之旅。", sections: [ 
             { label: "Early Morning (熱氣球行程)", places: [ 
-                { time: "03:30", name: "娜路彎銀河酒店 (出發)", rating: "4.3 ★", desc: "【本日點對點起點 🏁】清晨於娜路彎銀河酒店集合準備出發，摸黑在 03:30 - 04:00 之間將車子開往鹿鳴溫泉酒店。", img: "https://images.unsplash.com/photo-1551882547-ff40c0d129df?auto=format&fit=crop&w=400&q=80", lat: 22.7758, lng: 121.1242 },
-                { driveTime: "約 30 分鐘", time: "04:00", name: "鹿鳴溫泉酒店 (停車場)", rating: "4.1 ★", desc: "必須在 04:00 前將車輛開抵鹿鳴飯店停車場停妥！隨即轉搭乘預約好的熱氣球專屬接駁車直奔鹿野高台。", img: "https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=400&q=80", lat: 22.8988, lng: 121.0963 }, 
+                { time: "03:30", name: "娜路彎銀河酒店 (出發)", rating: "4.3 ★", desc: "【本日點對點起點 🏁】清晨於娜路彎銀河酒店集合準備出發，摸黑在 03:30 - 04:00 之間將車子開往鹿鳴溫泉酒店。", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 22.7758, lng: 121.1242 },
+                { driveTime: "約 30 分鐘", time: "04:00", name: "鹿鳴溫泉酒店 (停車場)", rating: "4.1 ★", desc: "必須在 04:00 前將車輛開抵鹿鳴飯店停車場停妥！隨即轉搭乘預約好的熱氣球專屬接駁車直奔鹿野高台。", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 22.8988, lng: 121.0963 }, 
                 { driveTime: "搭乘接駁車", time: "04:45", name: "鹿野高台", rating: "4.6 ★", desc: "清晨前來觀賞壯觀的國際熱氣球嘉年華，五彩繽紛的熱氣球在縱谷間緩緩升起，是台東最美的夏日經典畫面。", img: "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&w=400&q=80", lat: 22.9130, lng: 121.1205 },
-                { driveTime: "約 40 分鐘", time: "07:00", name: "娜路彎銀河酒店 (補眠)", rating: "4.3 ★", desc: "看完熱氣球後大約於早上 07:00 回到飯店吃早餐，接著瘋狂補眠到中午 12:00，把爆肝體力完全睡回來！", img: "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=400&q=80", lat: 22.7758, lng: 121.1242 }
+                { driveTime: "約 40 分鐘", time: "07:00", name: "娜路彎銀河酒店 (補眠)", rating: "4.3 ★", desc: "看完熱氣球後大約於早上 07:00 回到飯店吃早餐，接著瘋狂補眠到中午 12:00，把爆肝體力完全睡回來！", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 22.7758, lng: 121.1242 }
             ]}, 
             { label: "Afternoon", places: [ 
                 { time: "12:00", name: "台東市區 (午餐時間)", rating: "- ★", desc: "好好的睡飽退房後，直接前往台東市區尋找在地美食享用午餐。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 22.7550, lng: 121.1450 },
-                { driveTime: "約 15 分鐘", time: "13:30", name: "國立臺灣史前文化博物館", rating: "4.5 ★", desc: "全新內部整修落成，吃飽後吹冷氣躲太陽的好去處。能深度探索台灣遠古歷史與南島語族文化。", img: "https://images.unsplash.com/photo-1518998053401-878c73fd6e66?auto=format&fit=crop&w=400&q=80", lat: 22.7600, lng: 121.0930 } 
+                { driveTime: "約 15 分鐘", time: "13:30", name: "國立臺灣史前文化博物館", rating: "4.5 ★", desc: "全新內部整修落成，吃飽後吹冷氣躲太陽的好去處。能深度探索台灣遠古歷史與南島語族文化。", img: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=400&q=80", lat: 22.7600, lng: 121.0930 } 
             ]} 
         ] },
         3: { date: "2026/07/05 (日)", title: "台東 ➔ 高雄", desc: "南迴公路海岸線，完全順路不走回頭路！", sections: [ 
             { label: "Morning", places: [ 
-                { time: "08:30", name: "太麻里平交道", rating: "4.3 ★", desc: "神還原日本動漫《灌籃高手》的經典平交道場景！鐵道、號誌燈配合後方筆直的藍海公路，拍照效果無敵。", img: "https://images.unsplash.com/photo-1515002246390-7bf7e8f87b54?auto=format&fit=crop&w=400&q=80", lat: 22.6186, lng: 121.0028 }, 
-                { driveTime: "約 15 分鐘", time: "09:20", name: "多良車站", rating: "4.4 ★", desc: "被譽為台灣最美麗的火車站。站在觀景台上，能捕捉紅色鐵欄杆、復古鐵道與漸層太平洋完美交織的絕景。", img: "https://images.unsplash.com/photo-1616035255476-857cb3e0a2d5?auto=format&fit=crop&w=400&q=80", lat: 22.5085, lng: 120.9592 }, 
+                { time: "08:30", name: "太麻里平交道", rating: "4.3 ★", desc: "神還原日本動漫《灌籃高手》的經典平交道場景！鐵道、號誌燈配合後方筆直的藍海公路，拍照效果無敵。", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 22.6186, lng: 121.0028 }, 
+                { driveTime: "約 15 分鐘", time: "09:20", name: "多良車站", rating: "4.4 ★", desc: "被譽為台灣最美麗的火車站。站在觀景台上，能捕捉紅色鐵欄杆、復古鐵道與漸層太平洋完美交織的絕景。", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", lat: 22.5085, lng: 120.9592 }, 
                 { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "抵達屏東東港享用豐盛的海鮮午餐，這是一家連黑鮪魚都非常有名的在地知名老字號餐廳。", img: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=400&q=80", lat: 22.4660, lng: 120.4440 } 
             ]}, 
             { label: "Afternoon", places: [ 
-                { driveTime: "約 1 小時", time: "14:30", name: "壽山動物園", rating: "4.4 ★", desc: "經過改建後的全新壽山動物園，有新穎的天空步道，漫步其中能以不同視角觀察動物，十分舒適。", img: "https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=400&q=80", lat: 22.6395, lng: 120.2760 }, 
+                { driveTime: "約 1 小時", time: "14:30", name: "壽山動物園", rating: "4.4 ★", desc: "經過改建後的全新壽山動物園，有新穎的天空步道，漫步其中能以不同視角觀察動物，十分舒適。", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80", lat: 22.6395, lng: 120.2760 }, 
                 { driveTime: "約 20 分鐘", time: "17:00", name: "龍虎塔", rating: "4.3 ★", desc: "位於左營蓮池潭的東方傳統幾何高塔，記得要「從龍口入、虎口出」才能消災解厄保平安唷！", img: "https://images.unsplash.com/photo-1548625361-1ea7911b3be0?auto=format&fit=crop&w=400&q=80", lat: 22.6800, lng: 120.2910 } 
             ]} 
         ] },
         4: { date: "2026/07/06 (一)", title: "高雄 ➔ 台南", desc: "府城美食與古蹟。", sections: [ 
             { label: "Morning", places: [ 
-                { time: "11:30", name: "蒸鮮腸粉", rating: "4.3 ★", desc: "精緻且環境舒適的港式點心，提供美味的腸粉與中式創意小吃，適合作為前往台南前的飽腹首選。", img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=400&q=80", lat: 22.6450, lng: 120.3020 } 
+                { time: "11:30", name: "蒸鮮腸粉", rating: "4.3 ★", desc: "精緻且環境舒適的港式點心，提供美味的腸粉與中式創意小吃，適合作為前往台南前的飽腹首選。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 22.6450, lng: 120.3020 } 
             ]}, 
             { label: "Afternoon", places: [ 
                 { driveTime: "約 50 分鐘", time: "14:00", name: "奇美博物館", rating: "4.8 ★", desc: "宛如置身歐洲宮殿的希臘風純白建築，館藏豐富，從西洋藝術、兵器到動物標本，兼具知性與拍照美感。", img: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=400&q=80", lat: 22.9345, lng: 120.2260 }, 
-                { driveTime: "約 25 分鐘", time: "16:00", name: "安平古堡", rating: "4.4 ★", desc: "台灣最古老的紅磚城堡，承載了數百年的歷史記憶。黃昏時分前來漫步、參觀古蹟、順便逛安平老街吃點心。", img: "https://images.unsplash.com/photo-1582200236066-613d961e6c38?auto=format&fit=crop&w=400&q=80", lat: 23.0016, lng: 120.1606 } 
+                { driveTime: "約 25 分鐘", time: "16:00", name: "安平古堡", rating: "4.4 ★", desc: "台灣最古老的紅磚城堡，承載了數百年的歷史記憶。黃昏時分前來漫步、參觀古蹟、順便逛安平老街吃點心。", img: "https://images.unsplash.com/photo-1548625361-1ea7911b3be0?auto=format&fit=crop&w=400&q=80", lat: 23.0016, lng: 120.1606 } 
             ]} 
         ] },
         5: { date: "2026/07/07 (二)", title: "台南 ➔ 嘉義 ➔ 台中", desc: "嘉義祈福與台中之夜。", sections: [ 
@@ -283,13 +362,13 @@
                 { time: "09:30", name: "KHTOY絨毛玩偶旗艦館", rating: "4.8 ★", desc: "超大超好逛的絨毛娃娃工廠，擁有正版授權的迪士尼、動漫等各式玩偶，超多平價好入手的可愛娃娃。", img: "https://images.unsplash.com/photo-1558066191-236209b5eb02?auto=format&fit=crop&w=400&q=80", lat: 23.5350, lng: 120.4350 } 
             ]}, 
             { label: "Afternoon", places: [ 
-                { driveTime: "約 50 分鐘", time: "12:30", name: "竹山紫南宮", rating: "4.7 ★", desc: "全台最靈驗的土地公廟之一！大家可以來求發財金、摸金雞，保佑一整年平安順遂，財源滾滾。", img: "https://images.unsplash.com/photo-1610815594038-f80e92f25b39?auto=format&fit=crop&w=400&q=80", lat: 23.7788, lng: 120.7303 }, 
-                { driveTime: "約 1 小時", time: "17:00", name: "激旨燒肉", rating: "4.5 ★", desc: "逢甲夜市最強露天串燒居酒屋！現場常常有歌手駐唱，搭配炭火直烤的美味肉串與冰涼飲品，氣氛滿分。", img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80", lat: 24.1790, lng: 120.6450 } 
+                { driveTime: "約 50 分鐘", time: "12:30", name: "竹山紫南宮", rating: "4.7 ★", desc: "全台最靈驗的土地公廟之一！大家可以來求發財金、摸金雞，保佑一整年平安順遂，財源滾滾。", img: "https://images.unsplash.com/photo-1548625361-1ea7911b3be0?auto=format&fit=crop&w=400&q=80", lat: 23.7788, lng: 120.7303 }, 
+                { driveTime: "約 1 小時", time: "17:00", name: "激旨燒肉", rating: "4.5 ★", desc: "逢甲夜市最強露天串燒居酒屋！現場常常有歌手駐唱，搭配炭火直烤的美味肉串與冰涼飲品，氣氛滿分。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 24.1790, lng: 120.6450 } 
             ]} 
         ] },
         6: { date: "2026/07/08 (三)", title: "台中 ➔ 台北松山車站", desc: "返程平安到家。", sections: [ 
             { label: "Morning", places: [ 
-                { time: "10:00", name: "國立自然科學博物館", rating: "4.7 ★", desc: "經典的大型暴龍模型與多元的科學展廳，不管是大人還是小孩都能在這裡獲得滿滿的趣味與新知。", img: "https://images.unsplash.com/photo-1584984647264-7e61448aa824?auto=format&fit=crop&w=400&q=80", lat: 24.1533, lng: 120.6695 } 
+                { time: "10:00", name: "國立自然科學博物館", rating: "4.7 ★", desc: "經典的大型暴龍模型與多元的科學展廳，不管是大人還是小孩都能在這裡獲得滿滿的趣味與新知。", img: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=400&q=80", lat: 24.1533, lng: 120.6695 } 
             ]}, 
             { label: "Afternoon", places: [ 
                 { driveTime: "約 2 小時", time: "16:00", name: "台北松山車站", rating: "5.0 ★", desc: "繞完台灣一大圈，終於平安回到旅程的出發起點，滿載美好的環島回憶平安到家！", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 25.0498, lng: 121.5781 } 
@@ -302,22 +381,6 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     let currentLayerGroup = L.featureGroup().addTo(map);
     let routingControl = null;
-
-    const sidePanel = document.getElementById('sidePanel');
-    const dragHandle = document.getElementById('dragHandle');
-    let startY = 0;
-
-    dragHandle.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, {passive: true});
-    dragHandle.addEventListener('touchend', e => {
-        let endY = e.changedTouches[0].clientY;
-        if (endY - startY > 20) { sidePanel.classList.add('collapsed'); } 
-        else if (startY - endY > 20) { sidePanel.classList.remove('collapsed'); } 
-        else { sidePanel.classList.toggle('collapsed'); }
-    });
-
-    document.getElementById('mapArea').addEventListener('touchstart', () => {
-        document.querySelectorAll('input').forEach(input => input.blur());
-    }, {passive: true});
 
     function initNav() {
         const nav = document.getElementById('navContainer');
@@ -350,7 +413,13 @@
     function setActive(el) { 
         document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active')); 
         el.classList.add('active'); 
-        sidePanel.classList.remove('collapsed'); 
+        
+        // 若在手機版，切換選單時自動把捲簾展開到一半，方便閱讀
+        if(window.innerWidth <= 768) {
+            currentTranslateY = window.innerHeight * 0.45;
+            sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            sidePanel.style.transform = `translateY(${currentTranslateY}px)`;
+        }
     }
     
     function clearMap() { currentLayerGroup.clearLayers(); if (routingControl) map.removeControl(routingControl); }
