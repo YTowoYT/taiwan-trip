@@ -54,10 +54,6 @@
         .easter-egg-btn { background: #fef08a; border: 1px solid #facc15; font-size: 12px; cursor: pointer; margin-left: 10px; padding: 4px 10px; border-radius: 15px; font-weight: bold; color: #854d0e; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-5px);} 60% {transform: translateY(-3px);} }
         .egg-badge { background: #fef08a; color: #854d0e; font-size: 10px; padding: 2px 6px; border-radius: 8px; font-weight: bold; border: 1px solid #fde047; }
-
-        .notes-list { list-style: none; padding: 0; }
-        .notes-list li { background: #f8fafc; margin-bottom: 12px; padding: 16px; border-radius: 12px; border-left: 4px solid #facc15; font-size: 14px; line-height: 1.6; color: #334155; }
-        .notes-list li strong { color: #1e293b; display: block; margin-bottom: 4px; }
         
         .chat-container { display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; }
         .chat-messages { flex-grow: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 4px; }
@@ -101,10 +97,7 @@
         .modal-banner { width: 100%; height: 180px; background: #e5e7eb; position: relative; }
         .modal-banner img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* 關閉視窗按鈕 (右上角) */
         .modal-close-icon { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 10; }
-        
-        /* 更換圖片按鈕 (左上角) */
         .modal-edit-img-icon { position: absolute; top: 12px; left: 12px; background: #facc15; color: #854d0e; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
 
         .modal-body { padding: 20px; overflow-y: auto; max-height: 250px; }
@@ -198,7 +191,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // === 動態圖片系統 (從 Firebase 讀取大家自訂的圖片) ===
     window.customImages = {};
     window.currentViewDay = 1;
     const imgRef = ref(db, 'custom_images');
@@ -277,7 +269,7 @@
     function getMyName() { return localStorage.getItem('familyTripName') || ''; }
 
     window.openPlaceModal = function(name, defaultImg, rating, desc) {
-        window.currentModalPlace = name; // 記住目前打開的是哪個景點，方便更換圖片
+        window.currentModalPlace = name; 
         const finalImg = window.customImages[name] || defaultImg;
         document.getElementById('modalName').innerText = name;
         document.getElementById('modalImg').src = finalImg;
@@ -288,7 +280,6 @@
     };
     window.closeDetailModal = function() { document.getElementById('detailModal').style.display = 'none'; };
 
-    // === 網頁上直接更換圖片的神奇功能 ===
     window.changePlaceImage = function() {
         let newUrl = prompt("請貼上新的圖片網址 (結尾通常是 .jpg 或 .png)：\n\n小提示：你可以在 Google 圖片長按喜歡的照片，選擇「複製圖片連結」。");
         if (newUrl !== null && newUrl.trim() !== "") {
@@ -325,6 +316,10 @@
     window.deleteExp = function(expId, expOwner) {
         if (expOwner !== getMyName()) { alert("只能刪除自己的記帳喔！"); return; }
         if (confirm("確定要刪除這筆支出嗎？")) { remove(ref(db, 'expenses/' + expId)); }
+    };
+    window.deleteNote = function(noteId, user) {
+        if (user !== getMyName()) { alert("只能刪除自己新增的注意事項喔！"); return; }
+        if (confirm("確定要刪除這筆注意事項嗎？")) { remove(ref(db, 'notes/' + noteId)); }
     };
     window.updateFundSettings = function(field, value) {
         update(ref(db, 'fund_settings'), { [field]: Number(value) });
@@ -364,7 +359,8 @@
             ]}, 
             { label: "Afternoon", places: [ 
                 { driveTime: "約 1 小時", time: "14:30", name: "壽山動物園", rating: "4.4 ★", desc: "經過改建後的全新壽山動物園，有新穎的天空步道，漫步其中能以不同視角觀察動物，十分舒適。", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80", lat: 22.6395, lng: 120.2760 }, 
-                { driveTime: "約 20 分鐘", time: "17:00", name: "龍虎塔", rating: "4.3 ★", desc: "位於左營蓮池潭的東方傳統幾何高塔，記得要「從龍口入、虎口出」才能消災解厄保平安唷！", img: "https://images.unsplash.com/photo-1548625361-1ea7911b3be0?auto=format&fit=crop&w=400&q=80", lat: 22.6800, lng: 120.2910 } 
+                { driveTime: "約 20 分鐘", time: "17:00", name: "龍虎塔", rating: "4.3 ★", desc: "位於左營蓮池潭的東方傳統幾何高塔，記得要「從龍口入、虎口出」才能消災解厄保平安唷！", img: "https://images.unsplash.com/photo-1548625361-1ea7911b3be0?auto=format&fit=crop&w=400&q=80", lat: 22.6800, lng: 120.2910 },
+                { driveTime: "約 15 分鐘", time: "18:00", name: "劉家酸菜白肉鍋", rating: "4.3 ★", desc: "左營知名老店，酸白菜湯頭酸爽開胃，搭配Q彈白肉與捲餅，是晚餐的絕佳選擇。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 22.6749, lng: 120.2801 }
             ]} 
         ] },
         4: { date: "2026/07/06 (一)", title: "高雄 ➔ 台南", desc: "府城美食與古蹟。", sections: [ 
@@ -392,8 +388,7 @@
             { label: "Afternoon", places: [ 
                 { driveTime: "約 2 小時", time: "16:00", name: "台北松山車站", rating: "5.0 ★", desc: "繞完台灣一大圈，終於平安回到旅程的出發起點，滿載美好的環島回憶平安到家！", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 25.0498, lng: 121.5781 } 
             ]} 
-        ] },
-        notes: { title: "注意事項", desc: "旅途提醒：", items: [ { title: "車輛檢查", content: "確認油量胎壓。" }, { title: "預約提醒", content: "熱門景點建議預約。" } ] }
+        ] }
     };
 
     let map = L.map('map', { zoomControl: false }).setView([23.5, 121], 7);
@@ -461,7 +456,16 @@
                 });
             });
         }
-        if (allCoords.length > 1) { L.polyline(allCoords, {color: '#3b82f6', weight: 4, opacity: 0.7, dashArray: '8, 8'}).addTo(currentLayerGroup); }
+        
+        if (allCoords.length > 1) {
+            for (let i = 0; i < allCoords.length - 1; i++) {
+                let ratio = i / (allCoords.length - 2 || 1);
+                let r = Math.round(147 + ratio * (30 - 147));
+                let g = Math.round(197 + ratio * (58 - 197));
+                let b = Math.round(253 + ratio * (138 - 253));
+                L.polyline([allCoords[i], allCoords[i+1]], {color: `rgb(${r},${g},${b})`, weight: 4, opacity: 0.7, dashArray: '8, 8'}).addTo(currentLayerGroup);
+            }
+        }
         if (allCoords.length > 0) map.fitBounds(L.latLngBounds(allCoords), { padding: [30, 30] });
     }
     
@@ -488,7 +492,6 @@
                 const safeDesc = p.desc.replace(/'/g, "\\'").replace(/"/g, '"');
                 const eggBadgeHTML = p.isEgg ? `<span class="egg-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> 秘境彩蛋</span>` : '';
                 
-                // 從 Firebase 讀取大家自訂的圖片，沒有的話才用預設的
                 const finalImg = window.customImages[p.name] || p.img;
 
                 html += `
@@ -517,7 +520,33 @@
         });
         document.getElementById('panelContent').innerHTML = html;
         
-        if (coords.length > 1) { routingControl = L.Routing.control({ waypoints: coords.map(c => L.latLng(c[0], c[1])), createMarker: () => null, show: false, lineOptions: { styles: [{color: '#3b82f6', weight: 5}] } }).addTo(map); }
+        if (coords.length > 1) { 
+            routingControl = L.Routing.control({ 
+                waypoints: coords.map(c => L.latLng(c[0], c[1])), 
+                createMarker: () => null, 
+                show: false, 
+                addWaypoints: false,
+                lineOptions: { styles: [{opacity: 0, weight: 0}] } 
+            }).on('routesfound', function(e) {
+                let routeCoords = e.routes[0].coordinates;
+                let segments = coords.length - 1;
+                if(segments < 1) segments = 1;
+                let pointsPerSeg = Math.floor(routeCoords.length / segments);
+                
+                for(let i=0; i<segments; i++) {
+                    let startIdx = i * pointsPerSeg;
+                    let endIdx = (i === segments - 1) ? routeCoords.length : (i + 1) * pointsPerSeg + 1;
+                    let segCoords = routeCoords.slice(startIdx, endIdx);
+                    
+                    let ratio = segments > 1 ? i / (segments - 1) : 0;
+                    let r = Math.round(147 + ratio * (30 - 147));
+                    let g = Math.round(197 + ratio * (58 - 197));
+                    let b = Math.round(253 + ratio * (138 - 253));
+                    
+                    L.polyline(segCoords, {color: `rgb(${r},${g},${b})`, weight: 6, opacity: 0.8}).addTo(currentLayerGroup);
+                }
+            }).addTo(map); 
+        }
         if (coords.length > 0) {
             if (day === 6) map.setView([25.0498, 121.5781], 15);
             else map.fitBounds(L.latLngBounds(coords), { padding: [50, 50] });
@@ -526,10 +555,64 @@
     
     function renderNotes() {
         window.currentViewDay = null;
-        const data = itineraryData.notes;
-        let html = `<div class="day-label" style="color:#ca8a04;">IMPORTANT</div><h1 class="route-title">${data.title}</h1><ul class="notes-list">${data.items.map(i => `<li><strong>${i.title}</strong>${i.content}</li>`).join('')}</ul>`;
+        let html = `
+            <div class="day-label" style="color:#ca8a04; margin-top:0;">IMPORTANT</div>
+            <h1 class="route-title" style="margin-bottom:0;">注意事項</h1>
+            
+            <div class="chat-input-area" style="border-top:none; padding-top:12px; border-bottom:1px solid #e2e8f0; padding-bottom:16px; flex-wrap:wrap;">
+                <div style="width:100%; font-size:12px; color:#475569; margin-bottom:6px;">新增人: <strong>${getMyName() || '未綁定名字 (請先至留言板輸入)'}</strong></div>
+                <input type="text" id="noteInput" placeholder="輸入新的注意事項..." style="flex-grow:1; border:1px solid #cbd5e1; padding:10px 14px; border-radius:20px; font-size:14px; outline:none;" ${!getMyName() ? 'disabled' : ''}>
+                <button id="addNoteBtn" style="background:#ca8a04; color:white; border:none; padding:10px 16px; border-radius:20px; cursor:pointer; font-weight:500;" ${!getMyName() ? 'disabled' : ''}>新增</button>
+            </div>
+            
+            <div id="notesListArea" style="flex-grow:1; overflow-y:auto; margin-top:16px; padding-bottom:20px;">讀取中...</div>
+        `;
         document.getElementById('panelContent').innerHTML = html;
         renderAllDaysMap();
+
+        const notesRef = ref(db, 'notes');
+        onValue(notesRef, (snap) => {
+            const data = snap.val() || {};
+            const listArea = document.getElementById('notesListArea');
+            if(!listArea) return;
+            
+            let listHtml = '';
+            let index = 1;
+            
+            for(let id in data) {
+                const n = data[id];
+                let delBtn = (n.user === getMyName()) ? `<button onclick="window.deleteNote('${id}', '${n.user}')" style="background:none;border:none;color:#fca5a5;cursor:pointer;float:right;"><i class="fa-solid fa-trash"></i></button>` : '';
+                
+                listHtml += `
+                <div style="position: relative; margin-bottom: 24px; padding-left: 45px; min-height: 50px;">
+                    <div style="position: absolute; left: 0; top: -5px; font-size: 11px; color: #64748b; text-align: center; width: 36px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;" title="${n.user}">${n.user}</div>
+                    <div style="position: absolute; left: 6px; top: 14px; background: #facc15; color: #854d0e; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">${index}</div>
+                    <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border-left: 4px solid #facc15; font-size: 14px; color: #334155; line-height: 1.6; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        ${delBtn}
+                        ${n.text}
+                    </div>
+                </div>`;
+                index++;
+            }
+            if(Object.keys(data).length === 0) listHtml = '<div style="text-align:center;color:#94a3b8;font-size:13px;margin-top:20px;">目前無任何注意事項，來新增第一筆吧！</div>';
+            listArea.innerHTML = listHtml;
+        });
+
+        const noteAction = () => {
+            const name = getMyName();
+            const text = document.getElementById('noteInput').value.trim();
+            if(!name) { alert("請先到留言板綁定你的名字喔！"); return; }
+            if(text) {
+                push(ref(db, 'notes'), { user: name, text: text, timestamp: serverTimestamp() });
+                document.getElementById('noteInput').value = '';
+            }
+        };
+        const btn = document.getElementById('addNoteBtn');
+        const input = document.getElementById('noteInput');
+        if(btn && input) {
+            btn.onclick = noteAction;
+            input.addEventListener('keypress', e => { if(e.key === 'Enter') noteAction(); });
+        }
     }
     
     function renderChat() {
