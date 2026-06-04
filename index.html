@@ -79,15 +79,14 @@
         .fund-status.warning { background-color: #b91c1c !important; color: #fde047 !important; box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3); } 
 
         .expense-group { margin-bottom: 16px; }
-        .expense-user { font-weight: bold; font-size: 16px; color: #111827; }
+        .expense-user { font-weight: bold; font-size: 15px; color: #111827; }
         .expense-items { border-left: 2px solid #cbd5e1; margin-left: 8px; padding-left: 12px; margin-top: 4px; }
         .expense-item { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 4px; align-items: center; }
         .expense-item-del { color: #fca5a5; background: none; border: none; cursor: pointer; padding: 0 4px; }
-        .expense-total { font-size: 14px; font-weight: bold; color: #1e293b; margin-top: 6px; }
+        .expense-total { font-size: 13px; font-weight: bold; color: #64748b; margin-top: 4px; }
         .summary-area { border-top: 2px dashed #cbd5e1; padding-top: 16px; margin-top: 20px; padding-bottom: 20px; }
         .summary-title { font-weight: bold; margin-bottom: 12px; color: #111827; }
         .summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 6px; }
-        .summary-grand-total { font-weight: bold; font-size: 18px; color: #b91c1c; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; }
         
         #expenseListArea { flex-grow: 1; overflow-y: auto; max-height: 55vh; padding-bottom: 30px; border-bottom: 1px solid #e2e8f0; }
 
@@ -163,7 +162,7 @@
     <div class="modal-content" style="padding: 30px; text-align: center; max-width: 320px;">
         <div style="color:#e74c3c; font-size: 22px; font-weight: bold; margin-bottom: 15px;">🎉 發現隱藏秘境！</div>
         <div style="font-size: 14px; color: #475569; margin-bottom: 25px; line-height: 1.6;">
-            在前往太麻里的路上，其實會順路經過「華源椰林大道」與「華源海灣」。絕美的天空之鏡和漸層太平洋海景，是否要將這兩個秘境加入今天的行程中？
+            在前往太麻里的路上，其實會順路經過「華源椰林大道」與「華源海灣」。絕美的天空之鏡 and 漸層太平洋海景，是否要將這兩個秘境加入今天的行程中？
         </div>
         <div style="display:flex; gap: 10px;">
             <button style="flex:1; padding: 12px; border-radius: 20px; border: none; background: #e2e8f0; color: #475569; font-weight: bold; cursor: pointer;" onclick="window.closeEggModal()">先不要</button>
@@ -276,11 +275,10 @@
         document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
         document.getElementById('modalDesc').innerText = desc;
         
-        // ★ 新增判斷：若是劉家酸菜白肉鍋，套用指定的導航網址
         if (name === "劉家酸菜白肉鍋") {
             document.getElementById('modalNavBtn').href = "https://maps.app.goo.gl/yMGTj7SDLCkLUEHX8";
         } else {
-            document.getElementById('modalNavBtn').href = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(name)}`;
+            document.getElementById('modalNavBtn').href = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent(name)}`;
         }
         
         document.getElementById('detailModal').style.display = 'flex';
@@ -463,15 +461,8 @@
                 });
             });
         }
-        
-        if (allCoords.length > 1) {
-            for (let i = 0; i < allCoords.length - 1; i++) {
-                let ratio = i / (allCoords.length - 2 || 1);
-                // ★ 顏色改為 HSL 彩虹漸層 (從 0 紅色 到 260 紫色)
-                let hue = Math.round(ratio * 260);
-                L.polyline([allCoords[i], allCoords[i+1]], {color: `hsl(${hue}, 90%, 45%)`, weight: 4, opacity: 0.8, dashArray: '8, 8'}).addTo(currentLayerGroup);
-            }
-        }
+        // ★ 恢復為原來的單色經典藍
+        if (allCoords.length > 1) { L.polyline(allCoords, {color: '#3b82f6', weight: 4, opacity: 0.7, dashArray: '8, 8'}).addTo(currentLayerGroup); }
         if (allCoords.length > 0) map.fitBounds(L.latLngBounds(allCoords), { padding: [30, 30] });
     }
     
@@ -526,31 +517,8 @@
         });
         document.getElementById('panelContent').innerHTML = html;
         
-        if (coords.length > 1) { 
-            routingControl = L.Routing.control({ 
-                waypoints: coords.map(c => L.latLng(c[0], c[1])), 
-                createMarker: () => null, 
-                show: false, 
-                addWaypoints: false,
-                lineOptions: { styles: [{opacity: 0, weight: 0}] } 
-            }).on('routesfound', function(e) {
-                let routeCoords = e.routes[0].coordinates;
-                let segments = coords.length - 1;
-                if(segments < 1) segments = 1;
-                let pointsPerSeg = Math.floor(routeCoords.length / segments);
-                
-                for(let i=0; i<segments; i++) {
-                    let startIdx = i * pointsPerSeg;
-                    let endIdx = (i === segments - 1) ? routeCoords.length : (i + 1) * pointsPerSeg + 1;
-                    let segCoords = routeCoords.slice(startIdx, endIdx);
-                    
-                    let ratio = segments > 1 ? i / (segments - 1) : 0;
-                    // ★ 顏色改為 HSL 彩虹漸層 (從 0 紅色 到 260 紫色)
-                    let hue = Math.round(ratio * 260);
-                    L.polyline(segCoords, {color: `hsl(${hue}, 90%, 45%)`, weight: 6, opacity: 0.8}).addTo(currentLayerGroup);
-                }
-            }).addTo(map); 
-        }
+        // ★ 恢復為原來的導航單色經典藍
+        if (coords.length > 1) { routingControl = L.Routing.control({ waypoints: coords.map(c => L.latLng(c[0], c[1])), createMarker: () => null, show: false, lineOptions: { styles: [{color: '#3b82f6', weight: 5}] } }).addTo(map); }
         if (coords.length > 0) {
             if (day === 6) map.setView([25.0498, 121.5781], 15);
             else map.fitBounds(L.latLngBounds(coords), { padding: [50, 50] });
@@ -587,7 +555,6 @@
                 const n = data[id];
                 let delBtn = (n.user === getMyName()) ? `<button onclick="window.deleteNote('${id}', '${n.user}')" style="background:none;border:none;color:#fca5a5;cursor:pointer;"><i class="fa-solid fa-trash"></i></button>` : '';
                 
-                // ★ 修正名字排版，將名字與圖標整合並移除絕對定位寬度限制，確保長名字不會被咖掉
                 listHtml += `
                 <div style="position: relative; margin-bottom: 24px; padding-left: 10px;">
                     <div style="display: flex; align-items: center; margin-bottom: 6px;">
@@ -716,20 +683,24 @@
         window.currentViewDay = null;
         let html = `
             <div class="day-label" style="color:#991b1b; margin-top:0;">ACCOUNTING</div>
-            <h1 class="route-title" style="margin-bottom:0;">公積金記帳區</h1>
+            <h1 class="route-title" style="margin-bottom:0;">分流記帳區</h1>
             
             <div style="display:flex; gap:8px; margin-top:12px; align-items:center; font-size:14px; color:#475569;">
-                大人: <input type="number" id="adultsInput" style="width:50px; padding:4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center;" onchange="window.updateFundSettings('adults', this.value)"> 人
-                預收: $ <input type="number" id="fundInput" style="width:70px; padding:4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center;" onchange="window.updateFundSettings('perPerson', this.value)"> /人
+                大人: <input type="number" id="adultsInput" style="width:40px; padding:4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center;" onchange="window.updateFundSettings('adults', this.value)"> 人
+                預收: $ <input type="number" id="fundInput" style="width:60px; padding:4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center;" onchange="window.updateFundSettings('perPerson', this.value)"> /人
             </div>
             
             <div id="fundStatusBox" class="fund-status good">讀取中...</div>
             
-            <div class="chat-input-area" style="flex-wrap:wrap; border-top:none; padding-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:16px;">
-                <div style="width:100%; font-size:12px; color:#475569; margin-bottom:6px;">記錄人: <strong>${getMyName() || '未綁定名字 (請先至留言板輸入)'}</strong></div>
-                <input type="text" id="expItemInput" placeholder="項目名稱 (例:午餐)" ${!getMyName() ? 'disabled' : ''}>
-                <input type="number" id="expPriceInput" placeholder="金額" style="width:80px;" ${!getMyName() ? 'disabled' : ''}>
-                <button id="addExpBtn" ${!getMyName() ? 'disabled' : ''}>新增紀錄</button>
+            <div class="chat-input-area" style="flex-wrap:wrap; border-top:none; padding-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:16px; gap:6px;">
+                <div style="width:100%; font-size:12px; color:#475569; margin-bottom:4px;">記錄人: <strong>${getMyName() || '未綁定名字 (請先至留言板輸入)'}</strong></div>
+                <select id="expTypeInput" style="padding: 8px 6px; border-radius: 20px; border: 1px solid #cbd5e1; font-size: 13px; outline: none; background: white;" ${!getMyName() ? 'disabled' : ''}>
+                    <option value="fund">🍚 公積金支出</option>
+                    <option value="advance">💳 個人代墊款</option>
+                </select>
+                <input type="text" id="expItemInput" placeholder="項目(例:民宿)" style="flex-grow:1; min-width:80px;" ${!getMyName() ? 'disabled' : ''}>
+                <input type="number" id="expPriceInput" placeholder="金額" style="width:65px;" ${!getMyName() ? 'disabled' : ''}>
+                <button id="addExpBtn" style="padding: 10px 12px;" ${!getMyName() ? 'disabled' : ''}>新增</button>
             </div>
             
             <div id="expenseListArea" style="flex-grow:1; overflow-y:auto; margin-top:16px; padding-bottom:20px;"></div>
@@ -741,6 +712,8 @@
         const expRef = ref(db, 'expenses');
         let currentFundTotal = 0;
         let currentSpentTotal = 0;
+        let totalAdvanceTotal = 0;
+        let globalAdultsCount = 6;
 
         onValue(fundRef, (snap) => {
             let settings = snap.val() || { adults: 6, perPerson: 5000 };
@@ -748,6 +721,7 @@
             const fnInput = document.getElementById('fundInput');
             if(adInput && fnInput) { adInput.value = settings.adults; fnInput.value = settings.perPerson; }
             currentFundTotal = settings.adults * settings.perPerson;
+            globalAdultsCount = settings.adults;
             updateFundStatusBox();
         });
 
@@ -756,33 +730,79 @@
             const listArea = document.getElementById('expenseListArea');
             if (!listArea) return;
             
-            let groupedData = {};
+            let groupedFund = {};
+            let groupedAdvance = {};
             currentSpentTotal = 0;
+            totalAdvanceTotal = 0;
 
             for (let id in data) {
                 const item = data[id];
-                if (!groupedData[item.user]) groupedData[item.user] = { total: 0, items: [] };
-                groupedData[item.user].items.push({ id: id, name: item.item, price: Number(item.price) });
-                groupedData[item.user].total += Number(item.price);
-                currentSpentTotal += Number(item.price);
+                const itemType = item.type || 'fund'; 
+                const itemPrice = Number(item.price);
+
+                if (itemType === 'fund') {
+                    if (!groupedFund[item.user]) groupedFund[item.user] = { total: 0, items: [] };
+                    groupedFund[item.user].items.push({ id: id, name: item.item, price: itemPrice });
+                    groupedFund[item.user].total += itemPrice;
+                    currentSpentTotal += itemPrice;
+                } else {
+                    if (!groupedAdvance[item.user]) groupedAdvance[item.user] = { total: 0, items: [] };
+                    groupedAdvance[item.user].items.push({ id: id, name: item.item, price: itemPrice });
+                    groupedAdvance[item.user].total += itemPrice;
+                    totalAdvanceTotal += itemPrice;
+                }
             }
 
-            let listHtml = '';
-            let summaryHtml = `<div class="summary-area"><div class="summary-title">------ 總金額結算 ------</div>`;
+            let listHtml = '<h3 style="font-size:14px; margin: 0 0 10px 0; color:#1e3a8a; border-bottom:1px solid #bfdbfe; padding-bottom:4px;"><i class="fa-solid fa-wallet"></i> 1. 公積金花費明細 (扣公帳)</h3>';
             
-            for (let user in groupedData) {
-                const uData = groupedData[user];
-                listHtml += `<div class="expense-group"><div class="expense-user">${user}</div><div class="expense-items">`;
+            let hasFundData = false;
+            for (let user in groupedFund) {
+                hasFundData = true;
+                const uData = groupedFund[user];
+                listHtml += `<div class="expense-group"><div class="expense-user"><i class="fa-regular fa-user"></i> ${user}</div><div class="expense-items">`;
                 uData.items.forEach(i => {
                     let delBtn = (user === getMyName()) ? `<button class="expense-item-del" onclick="window.deleteExp('${i.id}', '${user}')"><i class="fa-solid fa-xmark"></i></button>` : '';
                     listHtml += `<div class="expense-item"><span>${i.name} - $${i.price}</span>${delBtn}</div>`;
                 });
-                listHtml += `<div class="expense-total">輸出金額 - $${uData.total}</div></div></div>`;
-                summaryHtml += `<div class="summary-row"><span>${user}</span><span>$${uData.total}</span></div>`;
+                listHtml += `<div class="expense-total">小計：$${uData.total}</div></div></div>`;
             }
-            summaryHtml += `<div class="summary-grand-total"><span>總體加總金額</span><span>$${currentSpentTotal}</span></div></div>`;
+            if(!hasFundData) listHtml += '<div style="color:#94a3b8; font-size:13px; margin-bottom:15px; padding-left:10px;">暫無公積金花費</div>';
+
+            listHtml += '<h3 style="font-size:14px; margin: 20px 0 10px 0; color:#b91c1c; border-bottom:1px solid #fca5a5; padding-bottom:4px;"><i class="fa-solid fa-credit-card"></i> 2. 個人代墊明細 (行前/大筆費用)</h3>';
             
-            listArea.innerHTML = Object.keys(groupedData).length > 0 ? (listHtml + summaryHtml) : '<div style="text-align:center;color:#94a3b8;font-size:13px;">目前無任何記帳紀錄</div>';
+            let hasAdvanceData = false;
+            for (let user in groupedAdvance) {
+                hasAdvanceData = true;
+                const uData = groupedAdvance[user];
+                listHtml += `<div class="expense-group"><div class="expense-user"><i class="fa-regular fa-user"></i> ${user}</div><div class="expense-items">`;
+                uData.items.forEach(i => {
+                    let delBtn = (user === getMyName()) ? `<button class="expense-item-del" onclick="window.deleteExp('${i.id}', '${user}')"><i class="fa-solid fa-xmark"></i></button>` : '';
+                    listHtml += `<div class="expense-item"><span>${i.name} - $${i.price}</span>${delBtn}</div>`;
+                });
+                listHtml += `<div class="expense-total" style="color:#b91c1c;">代墊總額：$${uData.total}</div></div></div>`;
+            }
+            if(!hasAdvanceData) listHtml += '<div style="color:#94a3b8; font-size:13px; margin-bottom:15px; padding-left:10px;">暫無個人代墊款項</div>';
+
+            let remain = currentFundTotal - currentSpentTotal;
+            let avgAdvance = globalAdultsCount > 0 ? Math.round(totalAdvanceTotal / globalAdultsCount) : 0;
+            
+            let summaryHtml = `
+                <div class="summary-area">
+                    <div class="summary-title">📊 ------ 智慧結算中心 ------</div>
+                    <div class="summary-row"><span>公積金總預收：</span><span>$${currentFundTotal}</span></div>
+                    <div class="summary-row"><span>公積金總支出：</span><span>$${currentSpentTotal}</span></div>
+                    <div class="summary-row" style="font-weight:bold; color:${remain >= 0 ? '#16a34a' : '#dc2626'}"><span>公積金剩餘現金：</span><span>$${remain}</span></div>
+                    <div style="border-top: 1px dashed #cbd5e1; margin: 8px 0;"></div>
+                    <div class="summary-row"><span>全體代墊總額：</span><span>$${totalAdvanceTotal}</span></div>
+                    <div class="summary-row" style="font-weight:bold; color:#b91c1c; font-size:15px;"><span>每人平均應分攤代墊費：</span><span>$${avgAdvance} /人</span></div>
+                    <div style="font-size:11px; color:#64748b; margin-top:8px; line-height:1.4;">
+                        💡 結算小提示：<br>
+                        1. 公積金剩餘現金為正數，可在旅程結束後退還大家。<br>
+                        2. 個人代墊部分，最後結算時每人總共需轉出 $${avgAdvance} 給當初有代墊的人（系統會自動根據每人已墊付的金額多退少補，非常公平！）。
+                    </div>
+                </div>`;
+            
+            listArea.innerHTML = listHtml + summaryHtml;
             updateFundStatusBox();
         });
 
@@ -802,11 +822,12 @@
 
         const expAction = () => {
             const name = getMyName();
+            const type = document.getElementById('expTypeInput').value;
             const item = document.getElementById('expItemInput').value.trim();
             const price = document.getElementById('expPriceInput').value.trim();
             if (!name) return;
             if (item && price) {
-                push(ref(db, 'expenses'), { user: name, item: item, price: Number(price), timestamp: serverTimestamp() });
+                push(ref(db, 'expenses'), { user: name, type: type, item: item, price: Number(price), timestamp: serverTimestamp() });
                 document.getElementById('expItemInput').value = '';
                 document.getElementById('expPriceInput').value = '';
                 document.getElementById('expItemInput').focus();
