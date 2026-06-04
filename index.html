@@ -11,12 +11,19 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <style>
+        /* === 基礎重置與排版 === */
         body, html { margin: 0; padding: 0; height: 100vh; height: 100dvh; font-family: 'Noto Sans TC', sans-serif; background-color: #93c5fd; overflow: hidden; }
         .app-container { display: flex; height: 100%; position: relative; width: 100vw; flex-direction: row; }
+        
+        /* === 地圖區塊 === */
         .map-area { flex-grow: 1; position: relative; height: 100%; }
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background-color: #bfdbfe; }
         .leaflet-routing-container { display: none !important; }
+        .map-marker { background: #111827; color: white; border-radius: 50%; text-align: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor: pointer; }
+        .map-marker-small { width: 18px; height: 18px; line-height: 18px; font-size: 9px; }
+        .map-marker-large { width: 20px; height: 20px; line-height: 20px; font-size: 10px; }
         
+        /* === 頂部導航列 === */
         .top-nav { position: absolute; top: 20px; left: 20px; display: flex; gap: 8px; z-index: 1000; flex-wrap: wrap; padding-right: 20px; }
         .nav-pill { background: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; color: #1e293b; }
         .nav-pill.active { background: #111827; color: white; }
@@ -27,18 +34,22 @@
         .nav-pill.acc-btn { background: #fee2e2; color: #991b1b; }
         .nav-pill.acc-btn.active { background: #dc2626; color: white; }
         
+        /* === 側邊面板 === */
         .side-panel { width: 380px; background: white; height: calc(100% - 40px); margin: 20px 20px 20px 0; border-radius: 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; overflow: hidden; }
         .drag-handle-area { display: none; width: 100%; height: 24px; background: white; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; z-index: 20; touch-action: none; }
         .drag-handle { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
         .panel-content { padding: 0 24px 24px 24px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; }
         
+        /* === 標題與通用文字 === */
         .day-label { font-size: 12px; color: #475569; margin-bottom: 8px; display: flex; align-items: center; margin-top: 10px; }
         .day-date { font-weight: 700; color: #3b82f6; margin-left: 8px; font-size: 13px; background: #eff6ff; padding: 2px 8px; border-radius: 12px; }
         .route-title { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 12px 0; }
         .route-desc { font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 20px; }
+        .empty-hint { text-align: center; color: #94a3b8; font-size: 13px; margin-top: 20px; margin-bottom: 15px; padding-left: 10px; }
+        
+        /* === 行程景點卡片 === */
         .time-section { margin-bottom: 24px; }
         .time-label { font-size: 16px; font-weight: 500; color: #111827; margin-bottom: 12px; display: flex; align-items: center; }
-        
         .place-card { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; cursor: pointer; padding: 8px; border-radius: 12px; transition: background 0.2s; }
         .place-card:hover { background-color: #f1f5f9; }
         .place-img-wrapper { width: 64px; height: 64px; flex-shrink: 0; }
@@ -51,10 +62,12 @@
         .place-desc { font-size: 12px; color: #6b7280; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
         .drive-time-line { margin: -8px 0 12px 30px; padding-left: 50px; border-left: 2px dashed #cbd5e1; height: 30px; display: flex; align-items: center; font-size: 11px; color: #64748b; }
         
+        /* === 秘境彩蛋 === */
         .easter-egg-btn { background: #fef08a; border: 1px solid #facc15; font-size: 12px; cursor: pointer; margin-left: 10px; padding: 4px 10px; border-radius: 15px; font-weight: bold; color: #854d0e; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-5px);} 60% {transform: translateY(-3px);} }
         .egg-badge { background: #fef08a; color: #854d0e; font-size: 10px; padding: 2px 6px; border-radius: 8px; font-weight: bold; border: 1px solid #fde047; }
         
+        /* === 留言板與共用輸入區 === */
         .chat-container { display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; }
         .chat-messages { flex-grow: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 4px; }
         .msg-bubble { background: #f1f5f9; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; position: relative; }
@@ -66,39 +79,68 @@
         .msg-action-btn:hover { color: #64748b; }
         
         .chat-input-area { display: flex; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 16px; padding-bottom: env(safe-area-inset-bottom); flex-shrink: 0; align-items: center; }
-        #nameInput { width: 70px; border: 1px solid #cbd5e1; padding: 10px; border-radius: 20px; font-size: 13px; outline: none; transition: 0.3s; text-align: center; }
+        .chat-input-area input[type="text"], .chat-input-area input[type="number"] { border: 1px solid #cbd5e1; outline: none; transition: 0.3s; }
+        #nameInput { width: 70px; padding: 10px; border-radius: 20px; font-size: 13px; text-align: center; }
         #nameInput.locked { background-color: #e2e8f0; color: #475569; border-color: #e2e8f0; cursor: not-allowed; font-weight: bold; }
-        #msgInput { flex-grow: 1; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 20px; font-size: 14px; outline: none; }
+        #msgInput, #noteInput { flex-grow: 1; padding: 10px 14px; border-radius: 20px; font-size: 14px; }
         #sendBtn { background: #3b82f6; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; transition: 0.2s; }
         
-        #addExpBtn { background: #dc2626; color: white; border: none; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-weight: 500; font-size: 14px; flex-shrink: 0; transition: 0.2s; }
-        #addExpBtn:hover { background: #b91c1c; }
+        /* === 注意事項區 === */
+        .note-card { position: relative; margin-bottom: 24px; padding-left: 10px; }
+        .note-header { display: flex; align-items: center; margin-bottom: 6px; }
+        .note-badge { background: #facc15; color: #854d0e; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-right: 8px; flex-shrink: 0; }
+        .note-author { font-size: 12px; color: #64748b; font-weight: bold; flex-grow: 1; }
+        .note-author i { margin-right: 4px; }
+        .note-del-btn { background: none; border: none; color: #fca5a5; cursor: pointer; }
+        .note-text { background: #f8fafc; padding: 14px; border-radius: 12px; border-left: 4px solid #facc15; font-size: 14px; color: #334155; line-height: 1.6; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-left: 30px; }
+        #addNoteBtn { background: #ca8a04; color: white; border: none; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-weight: 500; }
 
-        .fund-status { padding: 16px; border-radius: 12px; margin-bottom: 16px; font-weight: bold; text-align: center; font-size: 16px; display: flex; flex-direction: column; gap: 4px; transition: background-color 0.3s; }
+        /* === 記帳區 === */
+        .acc-settings-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; font-size: 14px; color: #475569; }
+        .acc-settings-input { width: 40px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; }
+        .acc-settings-input.wide { width: 60px; }
+        
+        .fund-status { margin: 12px auto 16px auto; width: 66%; padding: 8px; font-size: 13px; border-radius: 8px; font-weight: bold; text-align: center; display: flex; flex-direction: column; gap: 4px; transition: background-color 0.3s; }
         .fund-status.good { background-color: #1e3a8a; color: #fde047; }
         .fund-status.warning { background-color: #b91c1c !important; color: #fde047 !important; box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3); } 
+        .fund-status-icon { font-size: 12px; margin-top: 4px; }
 
+        .acc-recorder-label { font-size: 12px; color: #475569; margin-bottom: 4px; padding-left: 4px; }
+        .acc-input-wrapper { flex-wrap: nowrap; border-top: none; padding-top: 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; gap: 4px; overflow-x: hidden; }
+        #expTypeInput { padding: 8px 2px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 12px; outline: none; background: white; flex-shrink: 0; }
+        #expItemInput { flex-grow: 1; width: 50px; min-width: 0; padding: 8px 6px; font-size: 13px; border-radius: 8px; }
+        #expPriceInput { width: 55px; min-width: 0; padding: 8px 6px; font-size: 13px; flex-shrink: 0; border-radius: 8px; }
+        #addExpBtn { background: #dc2626; color: white; border: none; padding: 8px 10px; border-radius: 12px; cursor: pointer; font-weight: 500; font-size: 13px; flex-shrink: 0; white-space: nowrap; transition: 0.2s; }
+        #addExpBtn:hover { background: #b91c1c; }
+        #expenseListArea { flex-grow: 1; overflow-y: auto; max-height: 55vh; padding-bottom: 30px; border-bottom: 1px solid #e2e8f0; margin-top: 16px; }
+
+        .acc-section-title { font-size: 14px; margin: 0 0 10px 0; padding-bottom: 4px; }
+        .acc-title-fund { color: #1e3a8a; border-bottom: 1px solid #bfdbfe; }
+        .acc-title-advance { color: #b91c1c; border-bottom: 1px solid #fca5a5; margin-top: 20px; }
+        
         .expense-group { margin-bottom: 16px; }
         .expense-user { font-weight: bold; font-size: 15px; color: #111827; }
         .expense-items { border-left: 2px solid #cbd5e1; margin-left: 8px; padding-left: 12px; margin-top: 4px; }
         .expense-item { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 4px; align-items: center; }
         .expense-item-del { color: #fca5a5; background: none; border: none; cursor: pointer; padding: 0 4px; }
         .expense-total { font-size: 13px; font-weight: bold; color: #64748b; margin-top: 4px; }
+        .expense-total.advance { color: #b91c1c; }
+        
         .summary-area { border-top: 2px dashed #cbd5e1; padding-top: 16px; margin-top: 20px; padding-bottom: 20px; }
         .summary-title { font-weight: bold; margin-bottom: 12px; color: #111827; }
         .summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 6px; }
-        
-        #expenseListArea { flex-grow: 1; overflow-y: auto; max-height: 55vh; padding-bottom: 30px; border-bottom: 1px solid #e2e8f0; }
+        .summary-divider { border-top: 1px dashed #cbd5e1; margin: 8px 0; }
+        .summary-row.bold { font-weight: bold; }
+        .summary-row.advance-final { font-weight: bold; color: #b91c1c; font-size: 15px; }
+        .summary-hint { font-size: 11px; color: #64748b; margin-top: 8px; line-height: 1.4; }
 
+        /* === 景點詳細彈出視窗 === */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; backdrop-filter: blur(4px); justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 20px; width: 85%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; position: relative; }
-        
         .modal-banner { width: 100%; height: 180px; background: #e5e7eb; position: relative; }
         .modal-banner img { width: 100%; height: 100%; object-fit: cover; }
-        
         .modal-close-icon { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 10; }
         .modal-edit-img-icon { position: absolute; top: 12px; left: 12px; background: #facc15; color: #854d0e; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-
         .modal-body { padding: 20px; overflow-y: auto; max-height: 250px; }
         .modal-place-name { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px; }
         .modal-place-rating { font-size: 13px; color: #eab308; font-weight: 500; margin-bottom: 12px; }
@@ -107,6 +149,7 @@
         .btn-nav { flex-grow: 1; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; transition: background 0.2s; }
         .btn-nav:hover { background: #2563eb; }
 
+        /* === 手機版響應式 === */
         @media (max-width: 768px) { 
             .app-container { flex-direction: column; } 
             .map-area { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 1; }
@@ -227,32 +270,24 @@
         if (!isDragging) return;
         let deltaY = e.touches[0].clientY - startY;
         let newTranslateY = currentTranslateY + deltaY;
-        
         let maxTranslate = window.innerHeight * 0.80; 
         if (newTranslateY < 0) newTranslateY = 0; 
         if (newTranslateY > maxTranslate) newTranslateY = maxTranslate;
-        
         sidePanel.style.transform = `translateY(${newTranslateY}px)`;
     }, {passive: true});
 
     document.addEventListener('touchend', e => {
         if (!isDragging) return;
         isDragging = false;
-        
         let deltaY = e.changedTouches[0].clientY - startY;
         currentTranslateY += deltaY;
-        
         let vh = window.innerHeight;
         let maxTranslate = vh * 0.80;
         if (currentTranslateY < 0) currentTranslateY = 0;
         if (currentTranslateY > maxTranslate) currentTranslateY = maxTranslate;
 
         sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-        
-        let snapTop = 0;
-        let snapMid = vh * 0.45;
-        let snapBot = vh * 0.80;
-        
+        let snapTop = 0, snapMid = vh * 0.45, snapBot = vh * 0.80;
         let diffTop = Math.abs(currentTranslateY - snapTop);
         let diffMid = Math.abs(currentTranslateY - snapMid);
         let diffBot = Math.abs(currentTranslateY - snapBot);
@@ -285,6 +320,7 @@
         
         document.getElementById('detailModal').style.display = 'flex';
     };
+    
     window.closeDetailModal = function() { document.getElementById('detailModal').style.display = 'none'; };
 
     window.changePlaceImage = function() {
@@ -311,6 +347,7 @@
         renderDay(3);
     };
 
+    // === Firebase 操作共用邏輯 ===
     window.editMsg = function(msgId, oldText, msgOwner) {
         if (msgOwner !== getMyName()) { alert("你只能編輯自己的留言喔！"); return; }
         const newText = prompt("請輸入修改後的訊息：", oldText);
@@ -332,6 +369,7 @@
         update(ref(db, 'fund_settings'), { [field]: Number(value) });
     };
 
+    // === 核心行程資料 ===
     const itineraryData = {
         1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 台東", desc: "第一天啟程與初鹿牧場！", sections: [ 
             { label: "Morning", places: [ 
@@ -410,6 +448,7 @@
     let currentLayerGroup = L.featureGroup().addTo(map);
     let routingControl = null;
 
+    // === 初始化導航列 ===
     function initNav() {
         const nav = document.getElementById('navContainer');
         for (let i = 1; i <= 6; i++) {
@@ -419,29 +458,25 @@
             btn.onclick = () => { setActive(btn); renderDay(i); };
             nav.appendChild(btn);
         }
-        const notesBtn = document.createElement('div');
-        notesBtn.className = 'nav-pill notes-btn';
-        notesBtn.innerText = '注意事項';
-        notesBtn.onclick = () => { setActive(notesBtn); renderNotes(); };
-        nav.appendChild(notesBtn);
         
-        const chatBtn = document.createElement('div');
-        chatBtn.className = 'nav-pill chat-btn';
-        chatBtn.innerHTML = '<i class="fa-regular fa-comments"></i> 留言板';
-        chatBtn.onclick = () => { setActive(chatBtn); renderChat(); };
-        nav.appendChild(chatBtn);
+        const tabs = [
+            { text: '注意事項', class: 'notes-btn', action: renderNotes },
+            { text: '<i class="fa-regular fa-comments"></i> 留言板', class: 'chat-btn', action: renderChat },
+            { text: '<i class="fa-solid fa-file-invoice-dollar"></i> 記帳區', class: 'acc-btn', action: renderAccounting }
+        ];
 
-        const accBtn = document.createElement('div');
-        accBtn.className = 'nav-pill acc-btn';
-        accBtn.innerHTML = '<i class="fa-solid fa-file-invoice-dollar"></i> 記帳區';
-        accBtn.onclick = () => { setActive(accBtn); renderAccounting(); };
-        nav.appendChild(accBtn);
+        tabs.forEach(t => {
+            const btn = document.createElement('div');
+            btn.className = `nav-pill ${t.class}`;
+            btn.innerHTML = t.text;
+            btn.onclick = () => { setActive(btn); t.action(); };
+            nav.appendChild(btn);
+        });
     }
     
     function setActive(el) { 
         document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active')); 
         el.classList.add('active'); 
-        
         if(window.innerWidth <= 768) {
             currentTranslateY = window.innerHeight * 0.45;
             sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
@@ -451,6 +486,7 @@
     
     function clearMap() { currentLayerGroup.clearLayers(); if (routingControl) map.removeControl(routingControl); }
 
+    // === 地圖總覽渲染 ===
     function renderAllDaysMap() {
         clearMap();
         let allCoords = [];
@@ -460,12 +496,8 @@
                 sec.places.forEach(p => {
                     allCoords.push([p.lat, p.lng]);
                     const marker = L.marker([p.lat, p.lng], {
-                        icon: L.divIcon({ 
-                            className: '', 
-                            html: `<div style="background:#111827;color:white;width:18px;height:18px;border-radius:50%;text-align:center;line-height:18px;font-size:9px;border:2px solid white;box-shadow: 0 2px 4px rgba(0,0,0,0.3); cursor:pointer;">${iconIndex++}</div>` 
-                        })
+                        icon: L.divIcon({ className: '', html: `<div class="map-marker map-marker-small">${iconIndex++}</div>` })
                     }).addTo(currentLayerGroup);
-                    
                     marker.on('click', () => { window.openPlaceModal(p.name, p.img, p.rating, p.desc); });
                 });
             });
@@ -474,6 +506,7 @@
         if (allCoords.length > 0) map.fitBounds(L.latLngBounds(allCoords), { padding: [30, 30] });
     }
     
+    // === 單日行程渲染 ===
     function renderDay(day) {
         window.currentViewDay = day;
         const data = itineraryData[day];
@@ -485,7 +518,6 @@
 
         data.sections.forEach(sec => {
             html += `<div class="time-section"><div class="time-label">${sec.label}`;
-            
             if (day === 3 && sec.label === 'Morning' && !window.day3EggAdded) {
                 html += ` <button class="easter-egg-btn" onclick="window.openEggModal()">🎁 點我尋找秘境</button>`;
             }
@@ -493,10 +525,8 @@
 
             sec.places.forEach(p => {
                 if (p.driveTime) html += `<div class="drive-time-line"><i class="fa-solid fa-car-side"></i> ${p.driveTime}</div>`;
-                
                 const safeDesc = p.desc.replace(/'/g, "\\'").replace(/"/g, '"');
                 const eggBadgeHTML = p.isEgg ? `<span class="egg-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> 秘境彩蛋</span>` : '';
-                
                 const finalImg = window.customImages[p.name] || p.img;
 
                 html += `
@@ -511,10 +541,7 @@
                     </div>`;
                 
                 const marker = L.marker([p.lat, p.lng], {
-                    icon: L.divIcon({ 
-                        className: '', 
-                        html: `<div style="background:#111827;color:white;width:20px;height:20px;border-radius:50%;text-align:center;line-height:20px;font-size:10px;border:2px solid white; cursor:pointer;">${markerIndex}</div>` 
-                    })
+                    icon: L.divIcon({ className: '', html: `<div class="map-marker map-marker-large">${markerIndex}</div>` })
                 }).addTo(currentLayerGroup);
 
                 marker.on('click', () => { window.openPlaceModal(p.name, p.img, p.rating, p.desc); });
@@ -532,6 +559,7 @@
         }
     }
     
+    // === 注意事項渲染 ===
     function renderNotes() {
         window.currentViewDay = null;
         let html = `
@@ -540,8 +568,8 @@
             
             <div class="chat-input-area" style="border-top:none; padding-top:12px; border-bottom:1px solid #e2e8f0; padding-bottom:16px; flex-wrap:wrap;">
                 <div style="width:100%; font-size:12px; color:#475569; margin-bottom:6px;">新增人: <strong>${getMyName() || '未綁定名字 (請先至留言板輸入)'}</strong></div>
-                <input type="text" id="noteInput" placeholder="輸入新的注意事項..." style="flex-grow:1; border:1px solid #cbd5e1; padding:10px 14px; border-radius:20px; font-size:14px; outline:none;" ${!getMyName() ? 'disabled' : ''}>
-                <button id="addNoteBtn" style="background:#ca8a04; color:white; border:none; padding:10px 16px; border-radius:20px; cursor:pointer; font-weight:500;" ${!getMyName() ? 'disabled' : ''}>新增</button>
+                <input type="text" id="noteInput" placeholder="輸入新的注意事項...">
+                <button id="addNoteBtn" ${!getMyName() ? 'disabled' : ''}>新增</button>
             </div>
             
             <div id="notesListArea" style="flex-grow:1; overflow-y:auto; margin-top:16px; padding-bottom:20px;">讀取中...</div>
@@ -560,22 +588,20 @@
             
             for(let id in data) {
                 const n = data[id];
-                let delBtn = (n.user === getMyName()) ? `<button onclick="window.deleteNote('${id}', '${n.user}')" style="background:none;border:none;color:#fca5a5;cursor:pointer;"><i class="fa-solid fa-trash"></i></button>` : '';
+                let delBtn = (n.user === getMyName()) ? `<button class="note-del-btn" onclick="window.deleteNote('${id}', '${n.user}')"><i class="fa-solid fa-trash"></i></button>` : '';
                 
                 listHtml += `
-                <div style="position: relative; margin-bottom: 24px; padding-left: 10px;">
-                    <div style="display: flex; align-items: center; margin-bottom: 6px;">
-                        <div style="background: #facc15; color: #854d0e; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 22px; font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-right: 8px; flex-shrink: 0;">${index}</div>
-                        <div style="font-size: 12px; color: #64748b; font-weight: bold; flex-grow: 1;"><i class="fa-solid fa-user-pen" style="margin-right:4px;"></i>${n.user}</div>
+                <div class="note-card">
+                    <div class="note-header">
+                        <div class="note-badge">${index}</div>
+                        <div class="note-author"><i class="fa-solid fa-user-pen"></i>${n.user}</div>
                         ${delBtn}
                     </div>
-                    <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border-left: 4px solid #facc15; font-size: 14px; color: #334155; line-height: 1.6; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-left: 30px;">
-                        ${n.text}
-                    </div>
+                    <div class="note-text">${n.text}</div>
                 </div>`;
                 index++;
             }
-            if(Object.keys(data).length === 0) listHtml = '<div style="text-align:center;color:#94a3b8;font-size:13px;margin-top:20px;">目前無任何注意事項，來新增第一筆吧！</div>';
+            if(Object.keys(data).length === 0) listHtml = '<div class="empty-hint">目前無任何注意事項，來新增第一筆吧！</div>';
             listArea.innerHTML = listHtml;
         });
 
@@ -596,6 +622,7 @@
         }
     }
     
+    // === 互動留言板渲染 ===
     function renderChat() {
         window.currentViewDay = null;
         let html = `
@@ -642,11 +669,20 @@
                 const timeStr = `${monthDay} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
                 let actionBtnsHTML = '';
                 let bubbleClass = 'msg-bubble';
+                
                 if (m.user === currentUser && currentUser !== '') {
                     bubbleClass += ' has-actions';
-                    actionBtnsHTML = `<div class="msg-actions"><button class="msg-action-btn" onclick="window.editMsg('${id}', '${m.text}', '${m.user}')"><i class="fa-solid fa-pen"></i></button><button class="msg-action-btn" onclick="window.deleteMsg('${id}', '${m.user}')"><i class="fa-solid fa-trash"></i></button></div>`;
+                    actionBtnsHTML = `<div class="msg-actions">
+                        <button class="msg-action-btn" onclick="window.editMsg('${id}', '${m.text}', '${m.user}')"><i class="fa-solid fa-pen"></i></button>
+                        <button class="msg-action-btn" onclick="window.deleteMsg('${id}', '${m.user}')"><i class="fa-solid fa-trash"></i></button>
+                    </div>`;
                 }
-                msgList.innerHTML += `<div class="${bubbleClass}">${actionBtnsHTML}<div class="msg-user"><i class="fa-solid fa-user-circle"></i> ${m.user || '旅伴'}</div><div>${m.text}</div><div class="msg-time">${timeStr}</div></div>`;
+                msgList.innerHTML += `
+                    <div class="${bubbleClass}">${actionBtnsHTML}
+                        <div class="msg-user"><i class="fa-solid fa-user-circle"></i> ${m.user || '旅伴'}</div>
+                        <div>${m.text}</div>
+                        <div class="msg-time">${timeStr}</div>
+                    </div>`;
             }
             setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 100);
         });
@@ -686,32 +722,33 @@
         document.getElementById('msgInput').addEventListener('keypress', function (e) { if (e.key === 'Enter') sendAction(); });
     }
 
+    // === 分流記帳區渲染 ===
     function renderAccounting() {
         window.currentViewDay = null;
         let html = `
             <div class="day-label" style="color:#991b1b; margin-top:0;">ACCOUNTING</div>
             <h1 class="route-title" style="margin-bottom:0;">分流記帳區</h1>
             
-            <div style="display:flex; gap:8px; margin-top:12px; align-items:center; font-size:14px; color:#475569;">
-                大人: <input type="number" id="adultsInput" style="width:40px; padding:4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center;" onchange="window.updateFundSettings('adults', this.value)"> 人
-                預收: $ <input type="number" id="fundInput" style="width:60px; padding:4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center;" onchange="window.updateFundSettings('perPerson', this.value)"> /人
+            <div class="acc-settings-row">
+                大人: <input type="number" id="adultsInput" class="acc-settings-input" onchange="window.updateFundSettings('adults', this.value)"> 人
+                預收: $ <input type="number" id="fundInput" class="acc-settings-input wide" onchange="window.updateFundSettings('perPerson', this.value)"> /人
             </div>
             
-            <div id="fundStatusBox" class="fund-status good" style="margin: 12px auto 16px auto; width: 66%; padding: 8px; font-size: 13px; border-radius: 8px;">讀取中...</div>
+            <div id="fundStatusBox" class="fund-status good">讀取中...</div>
             
-            <div style="font-size:12px; color:#475569; margin-bottom:4px; padding-left:4px;">記錄人: <strong>${getMyName() || '未綁定(請至留言板輸入)'}</strong></div>
+            <div class="acc-recorder-label">記錄人: <strong>${getMyName() || '未綁定(請至留言板輸入)'}</strong></div>
             
-            <div class="chat-input-area" style="flex-wrap:nowrap; border-top:none; padding-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:16px; gap:4px; overflow-x:hidden;">
-                <select id="expTypeInput" style="padding: 8px 2px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 12px; outline: none; background: white; flex-shrink: 0;" ${!getMyName() ? 'disabled' : ''}>
+            <div class="chat-input-area acc-input-wrapper">
+                <select id="expTypeInput" ${!getMyName() ? 'disabled' : ''}>
                     <option value="fund">🍚公帳</option>
                     <option value="advance">💳代墊</option>
                 </select>
-                <input type="text" id="expItemInput" placeholder="項目" style="flex-grow:1; width:50px; min-width:0; padding:8px 6px; font-size: 13px;" ${!getMyName() ? 'disabled' : ''}>
-                <input type="number" id="expPriceInput" placeholder="金額" style="width:55px; min-width:0; padding:8px 6px; font-size: 13px; flex-shrink: 0;" ${!getMyName() ? 'disabled' : ''}>
-                <button id="addExpBtn" style="padding: 8px 10px; font-size: 13px; flex-shrink: 0; white-space: nowrap;" ${!getMyName() ? 'disabled' : ''}>新增</button>
+                <input type="text" id="expItemInput" placeholder="項目" ${!getMyName() ? 'disabled' : ''}>
+                <input type="number" id="expPriceInput" placeholder="金額" ${!getMyName() ? 'disabled' : ''}>
+                <button id="addExpBtn" ${!getMyName() ? 'disabled' : ''}>新增</button>
             </div>
             
-            <div id="expenseListArea" style="flex-grow:1; overflow-y:auto; margin-top:16px; padding-bottom:20px;"></div>
+            <div id="expenseListArea"></div>
         `;
         document.getElementById('panelContent').innerHTML = html;
         renderAllDaysMap();
@@ -761,8 +798,7 @@
                 }
             }
 
-            let listHtml = '<h3 style="font-size:14px; margin: 0 0 10px 0; color:#1e3a8a; border-bottom:1px solid #bfdbfe; padding-bottom:4px;"><i class="fa-solid fa-wallet"></i> 1. 公積金花費明細 (扣公帳)</h3>';
-            
+            let listHtml = '<h3 class="acc-section-title acc-title-fund"><i class="fa-solid fa-wallet"></i> 1. 公積金花費明細 (扣公帳)</h3>';
             let hasFundData = false;
             for (let user in groupedFund) {
                 hasFundData = true;
@@ -774,10 +810,9 @@
                 });
                 listHtml += `<div class="expense-total">小計：$${uData.total}</div></div></div>`;
             }
-            if(!hasFundData) listHtml += '<div style="color:#94a3b8; font-size:13px; margin-bottom:15px; padding-left:10px;">暫無公積金花費</div>';
+            if(!hasFundData) listHtml += '<div class="empty-hint">暫無公積金花費</div>';
 
-            listHtml += '<h3 style="font-size:14px; margin: 20px 0 10px 0; color:#b91c1c; border-bottom:1px solid #fca5a5; padding-bottom:4px;"><i class="fa-solid fa-credit-card"></i> 2. 個人代墊明細 (行前/大筆費用)</h3>';
-            
+            listHtml += '<h3 class="acc-section-title acc-title-advance"><i class="fa-solid fa-credit-card"></i> 2. 個人代墊明細 (行前/大筆費用)</h3>';
             let hasAdvanceData = false;
             for (let user in groupedAdvance) {
                 hasAdvanceData = true;
@@ -787,9 +822,9 @@
                     let delBtn = (user === getMyName()) ? `<button class="expense-item-del" onclick="window.deleteExp('${i.id}', '${user}')"><i class="fa-solid fa-xmark"></i></button>` : '';
                     listHtml += `<div class="expense-item"><span>${i.name} - $${i.price}</span>${delBtn}</div>`;
                 });
-                listHtml += `<div class="expense-total" style="color:#b91c1c;">代墊總額：$${uData.total}</div></div></div>`;
+                listHtml += `<div class="expense-total advance">代墊總額：$${uData.total}</div></div></div>`;
             }
-            if(!hasAdvanceData) listHtml += '<div style="color:#94a3b8; font-size:13px; margin-bottom:15px; padding-left:10px;">暫無個人代墊款項</div>';
+            if(!hasAdvanceData) listHtml += '<div class="empty-hint">暫無個人代墊款項</div>';
 
             let remain = currentFundTotal - currentSpentTotal;
             let avgAdvance = globalAdultsCount > 0 ? Math.round(totalAdvanceTotal / globalAdultsCount) : 0;
@@ -799,14 +834,14 @@
                     <div class="summary-title">📊 ------ 智慧結算中心 ------</div>
                     <div class="summary-row"><span>公積金總預收：</span><span>$${currentFundTotal}</span></div>
                     <div class="summary-row"><span>公積金總支出：</span><span>$${currentSpentTotal}</span></div>
-                    <div class="summary-row" style="font-weight:bold; color:${remain >= 0 ? '#16a34a' : '#dc2626'}"><span>公積金剩餘現金：</span><span>$${remain}</span></div>
-                    <div style="border-top: 1px dashed #cbd5e1; margin: 8px 0;"></div>
+                    <div class="summary-row bold" style="color:${remain >= 0 ? '#16a34a' : '#dc2626'}"><span>公積金剩餘現金：</span><span>$${remain}</span></div>
+                    <div class="summary-divider"></div>
                     <div class="summary-row"><span>全體代墊總額：</span><span>$${totalAdvanceTotal}</span></div>
-                    <div class="summary-row" style="font-weight:bold; color:#b91c1c; font-size:15px;"><span>每人平均應分攤代墊費：</span><span>$${avgAdvance} /人</span></div>
-                    <div style="font-size:11px; color:#64748b; margin-top:8px; line-height:1.4;">
+                    <div class="summary-row advance-final"><span>每人應分攤代墊費：</span><span>$${avgAdvance} /人</span></div>
+                    <div class="summary-hint">
                         💡 結算小提示：<br>
                         1. 公積金剩餘現金為正數，可在旅程結束後退還大家。<br>
-                        2. 個人代墊部分，最後結算時每人總共需轉出 $${avgAdvance} 給當初有代墊的人（系統會自動根據每人已墊付的金額多退少補，非常公平！）。
+                        2. 個人代墊部分，最後結算時每人總共需轉出 $${avgAdvance} 給當初有代墊的人（多退少補，非常公平！）。
                     </div>
                 </div>`;
             
@@ -821,10 +856,10 @@
             box.innerHTML = `<div>公積金總額: $${currentFundTotal}</div><div>目前剩餘: $${remain}</div>`;
             if (remain < (currentFundTotal / 3)) {
                 box.className = 'fund-status warning';
-                box.innerHTML += `<div style="font-size:12px; margin-top:4px;"><i class="fa-solid fa-triangle-exclamation"></i> 需補足公積金</div>`;
+                box.innerHTML += `<div class="fund-status-icon"><i class="fa-solid fa-triangle-exclamation"></i> 需補足公積金</div>`;
             } else {
                 box.className = 'fund-status good';
-                box.innerHTML += `<div style="font-size:12px; margin-top:4px;"><i class="fa-solid fa-circle-check"></i> 公積金充裕</div>`;
+                box.innerHTML += `<div class="fund-status-icon"><i class="fa-solid fa-circle-check"></i> 公積金充裕</div>`;
             }
         }
 
