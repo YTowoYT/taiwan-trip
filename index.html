@@ -217,6 +217,16 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script type="module">
+    <script type="module">
+    // === 防君子不防小人的簡單密碼鎖 ===
+    const userPwd = prompt("請輸入專屬旅遊密碼以解鎖行程表：");
+    if (userPwd !== "0709") { // <-- 這裡的 "0703" 就是你們的密碼，可以自己改
+        document.body.innerHTML = "<h1 style='text-align:center; margin-top:30vh; color:#3b82f6;'>🔒 密碼錯誤，無法進入行程表！</h1>";
+        throw new Error("密碼錯誤，停止載入網頁。");
+    }
+    // ==================================
+
+    import { initializeApp } ... (後面是你原本的程式碼)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, push, onValue, serverTimestamp, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     
