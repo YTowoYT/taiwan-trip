@@ -277,6 +277,8 @@
         
         if (name === "劉家酸菜白肉鍋") {
             document.getElementById('modalNavBtn').href = "https://maps.app.goo.gl/yMGTj7SDLCkLUEHX8";
+        } else if (name === "捉鳳凰民宿") {
+            document.getElementById('modalNavBtn').href = "https://maps.app.goo.gl/2s6PCuvDK6pf1LXFA(預計20:00到";
         } else {
             document.getElementById('modalNavBtn').href = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent(name)}`;
         }
@@ -358,37 +360,44 @@
         ] },
         3: { date: "2026/07/05 (日)", title: "台東 ➔ 高雄", desc: "南迴公路海岸線，完全順路不走回頭路！", sections: [ 
             { label: "Morning", places: [ 
-                { time: "08:30", name: "太麻里平交道", rating: "4.3 ★", desc: "神還原日本動漫《灌籃高手》的經典平交道場景！鐵道、號誌燈配合後方筆直的藍海公路，拍照效果無敵。", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 22.6186, lng: 121.0028 }, 
+                { time: "08:00", name: "娜路彎銀河酒店", rating: "4.3 ★", desc: "早安！從飯店出發準備前往南迴公路。", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 22.7758, lng: 121.1242 },
+                { driveTime: "約 30 分鐘", time: "08:30", name: "太麻里平交道", rating: "4.3 ★", desc: "神還原日本動漫《灌籃高手》的經典平交道場景！鐵道、號誌燈配合後方筆直的藍海公路，拍照效果無敵。", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 22.6186, lng: 121.0028 }, 
                 { driveTime: "約 15 分鐘", time: "09:20", name: "多良車站", rating: "4.4 ★", desc: "被譽為台灣最美麗的火車站。站在觀景台上，能捕捉紅色鐵欄杆、復古鐵道與漸層太平洋完美交織的絕景。", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", lat: 22.5085, lng: 120.9592 }, 
                 { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "抵達屏東東港享用豐盛的海鮮午餐，這是一家連黑鮪魚都非常有名的在地知名老字號餐廳。", img: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=400&q=80", lat: 22.4660, lng: 120.4440 } 
             ]}, 
             { label: "Afternoon", places: [ 
                 { driveTime: "約 1 小時", time: "14:30", name: "壽山動物園", rating: "4.4 ★", desc: "經過改建後的全新壽山動物園，有新穎的天空步道，漫步其中能以不同視角觀察動物，十分舒適。", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80", lat: 22.6395, lng: 120.2760 }, 
                 { driveTime: "約 20 分鐘", time: "17:00", name: "龍虎塔", rating: "4.3 ★", desc: "位於左營蓮池潭的東方傳統幾何高塔，記得要「從龍口入、虎口出」才能消災解厄保平安唷！", img: "https://images.unsplash.com/photo-1548625361-1ea7911b3be0?auto=format&fit=crop&w=400&q=80", lat: 22.6800, lng: 120.2910 },
-                { driveTime: "約 15 分鐘", time: "18:00", name: "劉家酸菜白肉鍋", rating: "4.3 ★", desc: "左營知名老店，酸白菜湯頭酸爽開胃，搭配Q彈白肉與捲餅，是晚餐的絕佳選擇。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 22.6749, lng: 120.2801 }
+                { driveTime: "約 15 分鐘", time: "18:00", name: "劉家酸菜白肉鍋", rating: "4.3 ★", desc: "左營知名老店，酸白菜湯頭酸爽開胃，搭配Q彈白肉與捲餅，是晚餐的絕佳選擇。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 22.6749, lng: 120.2801 },
+                { driveTime: "約 25 分鐘", time: "20:00", name: "高雄圓山大飯店", rating: "4.3 ★", desc: "抵達今晚下榻的圓山大飯店，好好休息！", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 22.6517, lng: 120.3340 }
             ]} 
         ] },
         4: { date: "2026/07/06 (一)", title: "高雄 ➔ 台南", desc: "府城美食與古蹟。", sections: [ 
             { label: "Morning", places: [ 
-                { time: "11:30", name: "蒸鮮腸粉", rating: "4.3 ★", desc: "精緻且環境舒適的港式點心，提供美味的腸粉與中式創意小吃，適合作為前往台南前的飽腹首選。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 22.6450, lng: 120.3020 } 
+                { time: "08:00", name: "高雄圓山大飯店", rating: "4.3 ★", desc: "從圓山大飯店出發，準備前往台南！", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 22.6517, lng: 120.3340 },
+                { driveTime: "約 45 分鐘", time: "11:30", name: "蒸鮮腸粉", rating: "4.3 ★", desc: "精緻且環境舒適的港式點心，提供美味的腸粉與中式創意小吃，適合作為前往台南前的飽腹首選。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 22.6450, lng: 120.3020 } 
             ]}, 
             { label: "Afternoon", places: [ 
                 { driveTime: "約 50 分鐘", time: "14:00", name: "奇美博物館", rating: "4.8 ★", desc: "宛如置身歐洲宮殿的希臘風純白建築，館藏豐富，從西洋藝術、兵器到動物標本，兼具知性與拍照美感。", img: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=400&q=80", lat: 22.9345, lng: 120.2260 }, 
-                { driveTime: "約 25 分鐘", time: "16:00", name: "安平古堡", rating: "4.4 ★", desc: "台灣最古老的紅磚城堡，承載了數百年的歷史記憶。黃昏時分前來漫步、參觀古蹟、順便逛安平老街吃點心。", img: "https://images.unsplash.com/photo-1548625361-1ea7911b3be0?auto=format&fit=crop&w=400&q=80", lat: 23.0016, lng: 120.1606 } 
+                { driveTime: "約 25 分鐘", time: "16:00", name: "安平古堡", rating: "4.4 ★", desc: "台灣最古老的紅磚城堡，承載了數百年的歷史記憶。黃昏時分前來漫步、參觀古蹟、順便逛安平老街吃點心。", img: "https://images.unsplash.com/photo-1548625361-1ea7911b3be0?auto=format&fit=crop&w=400&q=80", lat: 23.0016, lng: 120.1606 },
+                { driveTime: "約 15 分鐘", time: "18:00", name: "捉鳳凰民宿", rating: "4.7 ★", desc: "抵達台南特色民宿「捉鳳凰」，放行李好好休息。", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 22.9972, lng: 120.1970 }
             ]} 
         ] },
         5: { date: "2026/07/07 (二)", title: "台南 ➔ 嘉義 ➔ 台中", desc: "嘉義祈福與台中之夜。", sections: [ 
             { label: "Morning", places: [ 
-                { time: "09:30", name: "KHTOY絨毛玩偶旗艦館", rating: "4.8 ★", desc: "超大超好逛的絨毛娃娃工廠，擁有正版授權的迪士尼、動漫等各式玩偶，超多平價好入手的可愛娃娃。", img: "https://images.unsplash.com/photo-1558066191-236209b5eb02?auto=format&fit=crop&w=400&q=80", lat: 23.5350, lng: 120.4350 } 
+                { time: "08:00", name: "捉鳳凰民宿", rating: "4.7 ★", desc: "從民宿出發，開始新的一天！", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 22.9972, lng: 120.1970 },
+                { driveTime: "約 50 分鐘", time: "09:30", name: "KHTOY絨毛玩偶旗艦館", rating: "4.8 ★", desc: "超大超好逛的絨毛娃娃工廠，擁有正版授權的迪士尼、動漫等各式玩偶，超多平價好入手的可愛娃娃。", img: "https://images.unsplash.com/photo-1558066191-236209b5eb02?auto=format&fit=crop&w=400&q=80", lat: 23.5350, lng: 120.4350 } 
             ]}, 
             { label: "Afternoon", places: [ 
                 { driveTime: "約 50 分鐘", time: "12:30", name: "竹山紫南宮", rating: "4.7 ★", desc: "全台最靈驗的土地公廟之一！大家可以來求發財金、摸金雞，保佑一整年平安順遂，財源滾滾。", img: "https://images.unsplash.com/photo-1548625361-1ea7911b3be0?auto=format&fit=crop&w=400&q=80", lat: 23.7788, lng: 120.7303 }, 
-                { driveTime: "約 1 小時", time: "17:00", name: "激旨燒肉", rating: "4.5 ★", desc: "逢甲夜市最強露天串燒居酒屋！現場常常有歌手駐唱，搭配炭火直烤的美味肉串與冰涼飲品，氣氛滿分。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 24.1790, lng: 120.6450 } 
+                { driveTime: "約 1 小時", time: "18:00", name: "浮雲客棧", rating: "4.4 ★", desc: "抵達西屯的浮雲客棧辦理入住，放下行李整理一下。", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 24.1805, lng: 120.6456 },
+                { driveTime: "步行約 10 分鐘", time: "19:00", name: "激旨燒鳥", rating: "4.5 ★", desc: "逢甲夜市最強露天串燒居酒屋！現場常常有歌手駐唱，搭配炭火直烤的美味肉串與冰涼飲品，氣氛滿分。", img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80", lat: 24.1790, lng: 120.6450 } 
             ]} 
         ] },
         6: { date: "2026/07/08 (三)", title: "台中 ➔ 台北松山車站", desc: "返程平安到家。", sections: [ 
             { label: "Morning", places: [ 
-                { time: "10:00", name: "國立自然科學博物館", rating: "4.7 ★", desc: "經典的大型暴龍模型與多元的科學展廳，不管是大人還是小孩都能在這裡獲得滿滿的趣味與新知。", img: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=400&q=80", lat: 24.1533, lng: 120.6695 } 
+                { time: "10:00", name: "浮雲客棧", rating: "4.4 ★", desc: "睡飽退房，從浮雲客棧出發！", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80", lat: 24.1805, lng: 120.6456 },
+                { driveTime: "約 15 分鐘", time: "10:30", name: "國立自然科學博物館", rating: "4.7 ★", desc: "經典的大型暴龍模型與多元的科學展廳，不管是大人還是小孩都能在這裡獲得滿滿的趣味與新知。", img: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=400&q=80", lat: 24.1533, lng: 120.6695 } 
             ]}, 
             { label: "Afternoon", places: [ 
                 { driveTime: "約 2 小時", time: "16:00", name: "台北松山車站", rating: "5.0 ★", desc: "繞完台灣一大圈，終於平安回到旅程的出發起點，滿載美好的環島回憶平安到家！", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 25.0498, lng: 121.5781 } 
@@ -688,17 +697,18 @@
                 預收: $ <input type="number" id="fundInput" style="width:60px; padding:4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center;" onchange="window.updateFundSettings('perPerson', this.value)"> /人
             </div>
             
-            <div id="fundStatusBox" class="fund-status good">讀取中...</div>
+            <div id="fundStatusBox" class="fund-status good" style="margin: 12px auto 16px auto; width: 66%; padding: 8px; font-size: 13px; border-radius: 8px;">讀取中...</div>
             
-            <div class="chat-input-area" style="flex-wrap:wrap; border-top:none; padding-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:16px; gap:6px;">
-                <div style="width:100%; font-size:12px; color:#475569; margin-bottom:4px;">記錄人: <strong>${getMyName() || '未綁定名字 (請先至留言板輸入)'}</strong></div>
-                <select id="expTypeInput" style="padding: 8px 6px; border-radius: 20px; border: 1px solid #cbd5e1; font-size: 13px; outline: none; background: white;" ${!getMyName() ? 'disabled' : ''}>
-                    <option value="fund">🍚 公積金支出</option>
-                    <option value="advance">💳 個人代墊款</option>
+            <div style="font-size:12px; color:#475569; margin-bottom:4px; padding-left:4px;">記錄人: <strong>${getMyName() || '未綁定(請至留言板輸入)'}</strong></div>
+            
+            <div class="chat-input-area" style="flex-wrap:nowrap; border-top:none; padding-top:0; border-bottom:1px solid #e2e8f0; padding-bottom:16px; gap:4px; overflow-x:hidden;">
+                <select id="expTypeInput" style="padding: 8px 2px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 12px; outline: none; background: white; flex-shrink: 0;" ${!getMyName() ? 'disabled' : ''}>
+                    <option value="fund">🍚公帳</option>
+                    <option value="advance">💳代墊</option>
                 </select>
-                <input type="text" id="expItemInput" placeholder="項目(例:民宿)" style="flex-grow:1; min-width:80px;" ${!getMyName() ? 'disabled' : ''}>
-                <input type="number" id="expPriceInput" placeholder="金額" style="width:65px;" ${!getMyName() ? 'disabled' : ''}>
-                <button id="addExpBtn" style="padding: 10px 12px;" ${!getMyName() ? 'disabled' : ''}>新增</button>
+                <input type="text" id="expItemInput" placeholder="項目" style="flex-grow:1; width:50px; min-width:0; padding:8px 6px; font-size: 13px;" ${!getMyName() ? 'disabled' : ''}>
+                <input type="number" id="expPriceInput" placeholder="金額" style="width:55px; min-width:0; padding:8px 6px; font-size: 13px; flex-shrink: 0;" ${!getMyName() ? 'disabled' : ''}>
+                <button id="addExpBtn" style="padding: 8px 10px; font-size: 13px; flex-shrink: 0; white-space: nowrap;" ${!getMyName() ? 'disabled' : ''}>新增</button>
             </div>
             
             <div id="expenseListArea" style="flex-grow:1; overflow-y:auto; margin-top:16px; padding-bottom:20px;"></div>
@@ -786,7 +796,7 @@
             
             let summaryHtml = `
                 <div class="summary-area">
-                    <div class="summary-title"> ------ 總結 ------</div>
+                    <div class="summary-title">📊 ------ 智慧結算中心 ------</div>
                     <div class="summary-row"><span>公積金總預收：</span><span>$${currentFundTotal}</span></div>
                     <div class="summary-row"><span>公積金總支出：</span><span>$${currentSpentTotal}</span></div>
                     <div class="summary-row" style="font-weight:bold; color:${remain >= 0 ? '#16a34a' : '#dc2626'}"><span>公積金剩餘現金：</span><span>$${remain}</span></div>
