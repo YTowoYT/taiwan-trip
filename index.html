@@ -142,36 +142,22 @@
         .modal-close-icon { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 10; }
         .modal-edit-img-icon { position: absolute; top: 12px; left: 12px; background: #facc15; color: #854d0e; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
         .modal-body { padding: 20px; overflow-y: auto; max-height: 250px; }
-        <div id="lockScreen" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #93c5fd; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: 'Noto Sans TC', sans-serif;">
-    <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 75%; max-width: 300px;">
-        <div style="font-size: 45px; margin-bottom: 10px;">🔒</div>
-        <h2 style="margin: 0 0 15px 0; color: #1e293b; font-size: 18px; font-weight: 700;">環島行程表</h2>
-        <input type="tel" id="pwdInput" placeholder="請輸入密碼" style="width: 80%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; text-align: center; margin-bottom: 15px; outline: none; transition: 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
-        <button onclick="checkPwd()" style="background: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s;">解鎖進入</button>
-        <div id="pwdError" style="color: #ef4444; font-size: 13px; font-weight: 500; margin-top: 12px; display: none;">❌ 密碼錯誤，請重試！</div>
-    </div>
-</div>
-<script>
-    function checkPwd() {
-        const pwd = document.getElementById('pwdInput').value;
-        if (pwd === "0709") { // 🔑 你的密碼設在這裡（目前是 0709）
-            document.getElementById('lockScreen').style.display = 'none';
-        } else {
-            document.getElementById('pwdError').style.display = 'block';
-            document.getElementById('pwdInput').value = '';
-        }
-    }
-    // 讓手機按 Enter 也能解鎖
-    document.getElementById('pwdInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') checkPwd();
-    });
-</script>
         .modal-place-name { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px; }
         .modal-place-rating { font-size: 13px; color: #eab308; font-weight: 500; margin-bottom: 12px; }
         .modal-place-desc { font-size: 14px; color: #475569; line-height: 1.6; margin: 0; }
         .modal-footer { padding: 16px 20px; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; gap: 10px; }
         .btn-nav { flex-grow: 1; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; transition: background 0.2s; }
         .btn-nav:hover { background: #2563eb; }
+
+        /* === 密碼鎖專屬樣式 === */
+        #lockScreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #93c5fd; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: 'Noto Sans TC', sans-serif; }
+        .lock-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 75%; max-width: 300px; }
+        .lock-icon { font-size: 45px; margin-bottom: 10px; }
+        .lock-title { margin: 0 0 15px 0; color: #1e293b; font-size: 18px; font-weight: 700; }
+        .lock-input { width: 80%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; text-align: center; margin-bottom: 15px; outline: none; transition: 0.2s; }
+        .lock-input:focus { border-color: #3b82f6; }
+        .lock-btn { background: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }
+        .lock-error { color: #ef4444; font-size: 13px; font-weight: 500; margin-top: 12px; display: none; }
 
         /* === 手機版響應式 === */
         @media (max-width: 768px) { 
@@ -194,6 +180,30 @@
     </style>
 </head>
 <body>
+
+<div id="lockScreen">
+    <div class="lock-box">
+        <div class="lock-icon">🔒</div>
+        <h2 class="lock-title">2026 環島行程表</h2>
+        <input type="tel" id="pwdInput" class="lock-input" placeholder="請輸入密碼">
+        <button onclick="checkPwd()" class="lock-btn">解鎖進入</button>
+        <div id="pwdError" class="lock-error">❌ 密碼錯誤，請重試！</div>
+    </div>
+</div>
+<script>
+    function checkPwd() {
+        const pwd = document.getElementById('pwdInput').value;
+        if (pwd === "0709") { // 🔑 密碼設定為 0709
+            document.getElementById('lockScreen').style.display = 'none';
+        } else {
+            document.getElementById('pwdError').style.display = 'block';
+            document.getElementById('pwdInput').value = '';
+        }
+    }
+    document.getElementById('pwdInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkPwd();
+    });
+</script>
 <div class="app-container">
     <div class="map-area" id="mapArea">
         <div id="map"></div>
@@ -241,16 +251,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script type="module">
-    <script type="module">
-    // === 防君子不防小人的簡單密碼鎖 ===
-    const userPwd = prompt("請輸入專屬旅遊密碼以解鎖行程表：");
-    if (userPwd !== "0709") { // <-- 這裡的 "0709" 就是你們的密碼，可以自己改
-        document.body.innerHTML = "<h1 style='text-align:center; margin-top:30vh; color:#3b82f6;'>🔒 密碼錯誤，無法進入行程表！</h1>";
-        throw new Error("密碼錯誤，停止載入網頁。");
-    }
-    // ==================================
-
-    import { initializeApp } ... (後面是你原本的程式碼)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, push, onValue, serverTimestamp, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     
