@@ -344,14 +344,17 @@
         document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
         document.getElementById('modalDesc').innerText = desc;
         
+        // 🌟 修正為官方標準的 Google Maps 導航網址
+        let mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(name)}`;
+        
+        // 針對特定地點，加上更精確的地區關鍵字，讓 Google 導航更精準
         if (name === "劉家酸菜白肉鍋") {
-            document.getElementById('modalNavBtn').href = "https://maps.app.goo.gl/yMGTj7SDLCkLUEHX8";
+            mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent("劉家酸菜白肉鍋 中正堂本館")}`;
         } else if (name === "捉鳳凰民宿") {
-            document.getElementById('modalNavBtn').href = "https://maps.app.goo.gl/2s6PCuvDK6pf1LXFA(預計20:00到";
-        } else {
-            document.getElementById('modalNavBtn').href = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent(name)}`;
+            mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent("捉鳳凰民宿 台南")}`;
         }
         
+        document.getElementById('modalNavBtn').href = mapUrl;
         document.getElementById('detailModal').style.display = 'flex';
     };
     
