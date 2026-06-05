@@ -777,7 +777,7 @@
             
             <div class="chat-input-area acc-input-wrapper">
                 <select id="expTypeInput" ${!getMyName() ? 'disabled' : ''}>
-                    <option value="fund">🍚公帳</option>
+                    <option value="fund">🤑公帳</option>
                     <option value="advance">💳代墊</option>
                 </select>
                 <input type="text" id="expItemInput" placeholder="項目" ${!getMyName() ? 'disabled' : ''}>
@@ -868,7 +868,7 @@
             
             let summaryHtml = `
                 <div class="summary-area">
-                    <div class="summary-title">📊 ------ 智慧結算中心 ------</div>
+                    <div class="summary-title"> ------ 總結 ------</div>
                     <div class="summary-row"><span>公積金總預收：</span><span>$${currentFundTotal}</span></div>
                     <div class="summary-row"><span>公積金總支出：</span><span>$${currentSpentTotal}</span></div>
                     <div class="summary-row bold" style="color:${remain >= 0 ? '#16a34a' : '#dc2626'}"><span>公積金剩餘現金：</span><span>$${remain}</span></div>
