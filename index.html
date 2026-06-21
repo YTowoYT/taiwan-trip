@@ -8,8 +8,12 @@
     <title>2026 暑假環島行程表</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
     <style>
         /* === 基礎重置與排版 === */
         body, html { margin: 0; padding: 0; height: 100vh; height: 100dvh; font-family: 'Noto Sans TC', sans-serif; background-color: #93c5fd; overflow: hidden; }
@@ -167,7 +171,7 @@
         .lock-btn { background: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }
         .lock-error { color: #ef4444; font-size: 13px; font-weight: 500; margin-top: 12px; display: none; }
 
-        /* === 手機版響應式 === */
+        /* === 響應式：手機版與縮小的電腦視窗 === */
         @media (max-width: 768px) { 
             .app-container { flex-direction: column; } 
             .map-area { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 1; }
@@ -201,7 +205,7 @@
 <script>
     function checkPwd() {
         const pwd = document.getElementById('pwdInput').value;
-        if (pwd === "0709") { 
+        if (pwd === "0709") { // 🔑 密碼設定為 0709
             document.getElementById('lockScreen').style.display = 'none';
         } else {
             document.getElementById('pwdError').style.display = 'block';
@@ -221,7 +225,7 @@
         </div>
     </div>
     <div class="side-panel" id="sidePanel">
-        <div class="drag-handle-area" id="dragHandle"><div class="drag-handle"></div></div>
+        <div class="drag-handle-area" id="dragHandle" title="按住可上下拖曳"><div class="drag-handle"></div></div>
         <div class="panel-content" id="panelContent"></div>
     </div>
 </div>
@@ -259,9 +263,6 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-
 <script type="text/javascript">
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({
@@ -290,12 +291,10 @@ function googleTranslateElementInit() {
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ==========================================
-    // 🌟 重大修正：將行程資料宣告移到最上面，防止載入過快當機
-    // ==========================================
     window.customImages = {};
     window.currentViewDay = 1;
 
+    // === 核心行程資料 ===
     const itineraryData = {
         1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 台東", desc: "第一天啟程與池上便當！", sections: [ 
             { label: "Morning", places: [ 
@@ -378,16 +377,13 @@ function googleTranslateElementInit() {
     let routingControl = null;
 
     // ==========================================
-    // 🌟 Firebase 監聽事件 (在資料準備好後才啟動)
+    // 🌟 修正2：加入滑鼠拖曳事件，讓你在 Mac 電腦上也能無縫上下拉動！
     // ==========================================
-    const imgRef = ref(db, 'custom_images');
-    onValue(imgRef, (snap) => {
-        window.customImages = snap.val() || {};
-        if(window.currentViewDay) renderDay(window.currentViewDay);
-    });
-
     const sidePanel = document.getElementById('sidePanel');
     const dragHandle = document.getElementById('dragHandle');
+    let startY = 0;
+    let currentTranslateY = 0;
+    let isDragging = false;
     
     function setInitialMobilePanel() {
         if(window.innerWidth <= 768) {
@@ -401,35 +397,46 @@ function googleTranslateElementInit() {
     window.addEventListener('resize', setInitialMobilePanel);
     setInitialMobilePanel();
 
-    dragHandle.addEventListener('touchstart', e => { 
+    // 支援手機觸控與電腦滑鼠
+    dragHandle.addEventListener('touchstart', handleDragStart, {passive: true});
+    dragHandle.addEventListener('mousedown', handleDragStart);
+    document.addEventListener('touchmove', handleDragMove, {passive: true});
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('touchend', handleDragEnd);
+    document.addEventListener('mouseup', handleDragEnd);
+
+    function handleDragStart(e) { 
         if(window.innerWidth > 768) return;
-        startY = e.touches[0].clientY; 
+        startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
         sidePanel.style.transition = 'none'; 
         isDragging = true;
-    }, {passive: true});
+    }
 
-    document.addEventListener('touchmove', e => {
+    function handleDragMove(e) {
         if (!isDragging) return;
-        let deltaY = e.touches[0].clientY - startY;
+        let clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        let deltaY = clientY - startY;
         let newTranslateY = currentTranslateY + deltaY;
-        let maxTranslate = window.innerHeight * 0.80; 
+        let maxTranslate = window.innerHeight * 0.85; 
         if (newTranslateY < 0) newTranslateY = 0; 
         if (newTranslateY > maxTranslate) newTranslateY = maxTranslate;
         sidePanel.style.transform = `translateY(${newTranslateY}px)`;
-    }, {passive: true});
+    }
 
-    document.addEventListener('touchend', e => {
+    function handleDragEnd(e) {
         if (!isDragging) return;
         isDragging = false;
-        let deltaY = e.changedTouches[0].clientY - startY;
+        let clientY = e.type.includes('mouse') ? e.clientY : e.changedTouches[0].clientY;
+        let deltaY = clientY - startY;
         currentTranslateY += deltaY;
+        
         let vh = window.innerHeight;
-        let maxTranslate = vh * 0.80;
+        let maxTranslate = vh * 0.85;
         if (currentTranslateY < 0) currentTranslateY = 0;
         if (currentTranslateY > maxTranslate) currentTranslateY = maxTranslate;
 
         sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-        let snapTop = 0, snapMid = vh * 0.45, snapBot = vh * 0.80;
+        let snapTop = 0, snapMid = vh * 0.45, snapBot = vh * 0.85;
         let diffTop = Math.abs(currentTranslateY - snapTop);
         let diffMid = Math.abs(currentTranslateY - snapMid);
         let diffBot = Math.abs(currentTranslateY - snapBot);
@@ -440,11 +447,17 @@ function googleTranslateElementInit() {
         
         currentTranslateY = targetTranslate;
         sidePanel.style.transform = `translateY(${currentTranslateY}px)`;
+    }
+
+    // === Firebase 監聽事件 ===
+    const imgRef = ref(db, 'custom_images');
+    onValue(imgRef, (snap) => {
+        window.customImages = snap.val() || {};
+        if(window.currentViewDay) renderDay(window.currentViewDay);
     });
 
     function getMyName() { return localStorage.getItem('familyTripName') || ''; }
 
-    // === 開啟地點彈出視窗 ===
     window.openPlaceModal = function(name, defaultImg, rating, desc) {
         window.currentModalPlace = name; 
         const finalImg = window.customImages[name] || defaultImg;
@@ -453,13 +466,11 @@ function googleTranslateElementInit() {
         document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
         document.getElementById('modalDesc').innerText = desc;
         
-        // 🌟 正確的官方 Google Maps 搜尋導航連結
-        let mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
-        
+        let mapUrl = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent(name)}`;
         if (name === "劉家酸菜白肉鍋") {
-            mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("劉家酸菜白肉鍋 中正堂本館")}`;
+            mapUrl = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent("劉家酸菜白肉鍋 中正堂本館")}`;
         } else if (name.includes("捉鳳凰百年老宅")) {
-            mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("捉鳳凰百年老宅 台南")}`;
+            mapUrl = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent("捉鳳凰百年老宅 台南")}`;
         }
         
         document.getElementById('modalNavBtn').href = mapUrl;
