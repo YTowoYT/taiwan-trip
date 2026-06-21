@@ -814,4 +814,134 @@ function googleTranslateElementInit() {
         document.getElementById('panelContent').innerHTML = html;
         renderAllDaysMap();
 
-        const fundRef = ref(db, 'fund_
+        const fundRef = ref(db, 'fund_settings');
+        const expRef = ref(db, 'expenses');
+        let currentFundTotal = 0;
+        let currentSpentTotal = 0;
+        let totalAdvanceTotal = 0;
+        let globalAdultsCount = 6;
+
+        onValue(fundRef, (snap) => {
+            let settings = snap.val() || { adults: 6, perPerson: 5000 };
+            const adInput = document.getElementById('adultsInput');
+            const fnInput = document.getElementById('fundInput');
+            if(adInput && fnInput) { adInput.value = settings.adults; fnInput.value = settings.perPerson; }
+            currentFundTotal = settings.adults * settings.perPerson;
+            globalAdultsCount = settings.adults;
+            updateFundStatusBox();
+        });
+
+        onValue(expRef, (snap) => {
+            const data = snap.val() || {};
+            const listArea = document.getElementById('expenseListArea');
+            if (!listArea) return;
+            
+            let groupedFund = {};
+            let groupedAdvance = {};
+            currentSpentTotal = 0;
+            totalAdvanceTotal = 0;
+
+            for (let id in data) {
+                const item = data[id];
+                const itemType = item.type || 'fund'; 
+                const itemPrice = Number(item.price);
+
+                if (itemType === 'fund') {
+                    if (!groupedFund[item.user]) groupedFund[item.user] = { total: 0, items: [] };
+                    groupedFund[item.user].items.push({ id: id, name: item.item, price: itemPrice });
+                    groupedFund[item.user].total += itemPrice;
+                    currentSpentTotal += itemPrice;
+                } else {
+                    if (!groupedAdvance[item.user]) groupedAdvance[item.user] = { total: 0, items: [] };
+                    groupedAdvance[item.user].items.push({ id: id, name: item.item, price: itemPrice });
+                    groupedAdvance[item.user].total += itemPrice;
+                    totalAdvanceTotal += itemPrice;
+                }
+            }
+
+            let listHtml = '<h3 class="acc-section-title acc-title-fund"><i class="fa-solid fa-wallet"></i> 1. 公積金花費明細 (扣公帳)</h3>';
+            let hasFundData = false;
+            for (let user in groupedFund) {
+                hasFundData = true;
+                const uData = groupedFund[user];
+                listHtml += `<div class="expense-group"><div class="expense-user"><i class="fa-regular fa-user"></i> ${user}</div><div class="expense-items">`;
+                uData.items.forEach(i => {
+                    let delBtn = (user === getMyName()) ? `<button class="expense-item-del" onclick="window.deleteExp('${i.id}', '${user}')"><i class="fa-solid fa-xmark"></i></button>` : '';
+                    listHtml += `<div class="expense-item"><span>${i.name} - $${i.price}</span>${delBtn}</div>`;
+                });
+                listHtml += `<div class="expense-total">小計：$${uData.total}</div></div></div>`;
+            }
+            if(!hasFundData) listHtml += '<div class="empty-hint">暫無公積金花費</div>';
+
+            listHtml += '<h3 class="acc-section-title acc-title-advance"><i class="fa-solid fa-credit-card"></i> 2. 個人代墊明細 (行前/大筆費用)</h3>';
+            let hasAdvanceData = false;
+            for (let user in groupedAdvance) {
+                hasAdvanceData = true;
+                const uData = groupedAdvance[user];
+                listHtml += `<div class="expense-group"><div class="expense-user"><i class="fa-regular fa-user"></i> ${user}</div><div class="expense-items">`;
+                uData.items.forEach(i => {
+                    let delBtn = (user === getMyName()) ? `<button class="expense-item-del" onclick="window.deleteExp('${i.id}', '${user}')"><i class="fa-solid fa-xmark"></i></button>` : '';
+                    listHtml += `<div class="expense-item"><span>${i.name} - $${i.price}</span>${delBtn}</div>`;
+                });
+                listHtml += `<div class="expense-total advance">代墊總額：$${uData.total}</div></div></div>`;
+            }
+            if(!hasAdvanceData) listHtml += '<div class="empty-hint">暫無個人代墊款項</div>';
+
+            let remain = currentFundTotal - currentSpentTotal;
+            let avgAdvance = globalAdultsCount > 0 ? Math.round(totalAdvanceTotal / globalAdultsCount) : 0;
+            
+            let summaryHtml = `
+                <div class="summary-area">
+                    <div class="summary-title"> ------ 總結 ------</div>
+                    <div class="summary-row"><span>公積金總預收：</span><span>$${currentFundTotal}</span></div>
+                    <div class="summary-row"><span>公積金總支出：</span><span>$${currentSpentTotal}</span></div>
+                    <div class="summary-row bold" style="color:${remain >= 0 ? '#16a34a' : '#dc2626'}"><span>公積金剩餘現金：</span><span>$${remain}</span></div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-row"><span>全體代墊總額：</span><span>$${totalAdvanceTotal}</span></div>
+                    <div class="summary-row advance-final"><span>每人應分攤代墊費：</span><span>$${avgAdvance} /人</span></div>
+                    <div class="summary-hint">
+                        💡 結算小提示：<br>
+                        1. 公積金剩餘現金為正數，可在旅程結束後退還大家。<br>
+                        2. 個人代墊部分，最後結算時每人總共需轉出 $${avgAdvance} 給當初有代墊的人（多退少補，非常公平！）。
+                    </div>
+                </div>`;
+            
+            listArea.innerHTML = listHtml + summaryHtml;
+            updateFundStatusBox();
+        });
+
+        function updateFundStatusBox() {
+            const box = document.getElementById('fundStatusBox');
+            if(!box) return;
+            let remain = currentFundTotal - currentSpentTotal;
+            box.innerHTML = `<div>公積金總額: $${currentFundTotal}</div><div>目前剩餘: $${remain}</div>`;
+            if (remain < (currentFundTotal / 3)) {
+                box.className = 'fund-status warning';
+                box.innerHTML += `<div class="fund-status-icon"><i class="fa-solid fa-triangle-exclamation"></i> 需補足公積金</div>`;
+            } else {
+                box.className = 'fund-status good';
+                box.innerHTML += `<div class="fund-status-icon"><i class="fa-solid fa-circle-check"></i> 公積金充裕</div>`;
+            }
+        }
+
+        const expAction = () => {
+            const name = getMyName();
+            const type = document.getElementById('expTypeInput').value;
+            const item = document.getElementById('expItemInput').value.trim();
+            const price = document.getElementById('expPriceInput').value.trim();
+            if (!name) return;
+            if (item && price) {
+                push(ref(db, 'expenses'), { user: name, type: type, item: item, price: Number(price), timestamp: serverTimestamp() });
+                document.getElementById('expItemInput').value = '';
+                document.getElementById('expPriceInput').value = '';
+                document.getElementById('expItemInput').focus();
+            }
+        };
+        document.getElementById('addExpBtn').onclick = expAction;
+        document.getElementById('expPriceInput').addEventListener('keypress', function (e) { if (e.key === 'Enter') expAction(); });
+    }
+
+    initNav(); renderDay(1);
+</script>
+</body>
+</html>
