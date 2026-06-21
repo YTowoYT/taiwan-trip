@@ -201,7 +201,7 @@
 <script>
     function checkPwd() {
         const pwd = document.getElementById('pwdInput').value;
-        if (pwd === "0709") { // 🔑 密碼設定為 0709
+        if (pwd === "0709") { 
             document.getElementById('lockScreen').style.display = 'none';
         } else {
             document.getElementById('pwdError').style.display = 'block';
@@ -271,7 +271,7 @@ function googleTranslateElementInit() {
   }, 'google_translate_element');
 }
 </script>
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -290,144 +290,12 @@ function googleTranslateElementInit() {
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // ==========================================
+    // 🌟 重大修正：將行程資料宣告移到最上面，防止載入過快當機
+    // ==========================================
     window.customImages = {};
     window.currentViewDay = 1;
-    const imgRef = ref(db, 'custom_images');
-    onValue(imgRef, (snap) => {
-        window.customImages = snap.val() || {};
-        if(window.currentViewDay) renderDay(window.currentViewDay);
-    });
 
-    const sidePanel = document.getElementById('sidePanel');
-    const dragHandle = document.getElementById('dragHandle');
-    let startY = 0;
-    let currentTranslateY = 0;
-    let isDragging = false;
-    
-    function setInitialMobilePanel() {
-        if(window.innerWidth <= 768) {
-            currentTranslateY = window.innerHeight * 0.45; 
-            sidePanel.style.transform = `translateY(${currentTranslateY}px)`;
-            sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-        } else {
-            sidePanel.style.transform = 'none';
-        }
-    }
-    window.addEventListener('resize', setInitialMobilePanel);
-    setInitialMobilePanel();
-
-    dragHandle.addEventListener('touchstart', e => { 
-        if(window.innerWidth > 768) return;
-        startY = e.touches[0].clientY; 
-        sidePanel.style.transition = 'none'; 
-        isDragging = true;
-    }, {passive: true});
-
-    document.addEventListener('touchmove', e => {
-        if (!isDragging) return;
-        let deltaY = e.touches[0].clientY - startY;
-        let newTranslateY = currentTranslateY + deltaY;
-        let maxTranslate = window.innerHeight * 0.80; 
-        if (newTranslateY < 0) newTranslateY = 0; 
-        if (newTranslateY > maxTranslate) newTranslateY = maxTranslate;
-        sidePanel.style.transform = `translateY(${newTranslateY}px)`;
-    }, {passive: true});
-
-    document.addEventListener('touchend', e => {
-        if (!isDragging) return;
-        isDragging = false;
-        let deltaY = e.changedTouches[0].clientY - startY;
-        currentTranslateY += deltaY;
-        let vh = window.innerHeight;
-        let maxTranslate = vh * 0.80;
-        if (currentTranslateY < 0) currentTranslateY = 0;
-        if (currentTranslateY > maxTranslate) currentTranslateY = maxTranslate;
-
-        sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-        let snapTop = 0, snapMid = vh * 0.45, snapBot = vh * 0.80;
-        let diffTop = Math.abs(currentTranslateY - snapTop);
-        let diffMid = Math.abs(currentTranslateY - snapMid);
-        let diffBot = Math.abs(currentTranslateY - snapBot);
-        
-        let targetTranslate = snapMid;
-        if (diffTop < diffMid && diffTop < diffBot) targetTranslate = snapTop;
-        else if (diffBot < diffMid && diffBot < diffTop) targetTranslate = snapBot;
-        
-        currentTranslateY = targetTranslate;
-        sidePanel.style.transform = `translateY(${currentTranslateY}px)`;
-    });
-
-    function getMyName() { return localStorage.getItem('familyTripName') || ''; }
-
-    window.openPlaceModal = function(name, defaultImg, rating, desc) {
-        window.currentModalPlace = name; 
-        const finalImg = window.customImages[name] || defaultImg;
-        document.getElementById('modalName').innerText = name;
-        document.getElementById('modalImg').src = finalImg;
-        document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
-        document.getElementById('modalDesc').innerText = desc;
-        
-        let mapUrl = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent(name)}`;
-        
-        // 特定地點導航精準化
-        if (name === "劉家酸菜白肉鍋") {
-            mapUrl = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent("劉家酸菜白肉鍋 中正堂本館")}`;
-        } else if (name.includes("捉鳳凰百年老宅")) {
-            mapUrl = `http://googleusercontent.com/maps.google.com/maps?q=${encodeURIComponent("捉鳳凰百年老宅 台南")}`;
-        }
-        
-        document.getElementById('modalNavBtn').href = mapUrl;
-        document.getElementById('detailModal').style.display = 'flex';
-    };
-    
-    window.closeDetailModal = function() { document.getElementById('detailModal').style.display = 'none'; };
-
-    window.changePlaceImage = function() {
-        let newUrl = prompt("請貼上新的圖片網址 (結尾通常是 .jpg 或 .png)：\n\n小提示：你可以在 Google 圖片長按喜歡的照片，選擇「複製圖片連結」。");
-        if (newUrl !== null && newUrl.trim() !== "") {
-            update(ref(db, 'custom_images'), { [window.currentModalPlace]: newUrl.trim() });
-            document.getElementById('modalImg').src = newUrl.trim();
-        }
-    };
-
-    window.day3EggAdded = false;
-    window.openEggModal = function() { document.getElementById('eggModal').style.display = 'flex'; };
-    window.closeEggModal = function() { document.getElementById('eggModal').style.display = 'none'; };
-    window.addEggToItinerary = function() {
-        window.day3EggAdded = true;
-        document.getElementById('eggModal').style.display = 'none';
-        itineraryData[3].sections[0].places = [
-            { time: "09:00", name: "太麻里平交道", rating: "4.3 ★", desc: "神還原日本動漫《灌籃高手》的經典平交道場景！", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 22.6186, lng: 121.0028 }, 
-            { driveTime: "約 15 分鐘", time: "09:30", name: "華源海灣", rating: "4.5 ★", desc: "【秘境彩蛋 🌊】寬闊的沙灘與漸層的太平洋海水藍得不可思議。能拍出絕美「天空之鏡」海景倒影！", img: "https://images.unsplash.com/photo-1518998053401-878c73fd6e66?auto=format&fit=crop&w=400&q=80", lat: 22.6417, lng: 121.0114, isEgg: true },
-            { driveTime: "約 20 分鐘", time: "10:10", name: "多良車站", rating: "4.4 ★", desc: "被譽為台灣最美麗的火車站。站在觀景台上，能捕捉紅色鐵欄杆、復古鐵道與漸層太平洋完美交織的絕景。", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", lat: 22.5085, lng: 120.9592 }, 
-            { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "抵達屏東東港享用豐盛的海鮮午餐，這是一家連黑鮪魚都非常有名的在地知名老字號餐廳。", img: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=400&q=80", lat: 22.4660, lng: 120.4440 }
-        ];
-        renderDay(3);
-    };
-
-    // === Firebase 操作共用邏輯 ===
-    window.editMsg = function(msgId, oldText, msgOwner) {
-        if (msgOwner !== getMyName()) { alert("你只能編輯自己的留言喔！"); return; }
-        const newText = prompt("請輸入修改後的訊息：", oldText);
-        if (newText !== null && newText.trim() !== "") { update(ref(db, 'messages/' + msgId), { text: newText.trim() }); }
-    };
-    window.deleteMsg = function(msgId, msgOwner) {
-        if (msgOwner !== getMyName()) { alert("你只能刪除自己的留言喔！"); return; }
-        if (confirm("確定要刪除這則留言嗎？")) { remove(ref(db, 'messages/' + msgId)); }
-    };
-    window.deleteExp = function(expId, expOwner) {
-        if (expOwner !== getMyName()) { alert("只能刪除自己的記帳喔！"); return; }
-        if (confirm("確定要刪除這筆支出嗎？")) { remove(ref(db, 'expenses/' + expId)); }
-    };
-    window.deleteNote = function(noteId, user) {
-        if (user !== getMyName()) { alert("只能刪除自己新增的注意事項喔！"); return; }
-        if (confirm("確定要刪除這筆注意事項嗎？")) { remove(ref(db, 'notes/' + noteId)); }
-    };
-    window.updateFundSettings = function(field, value) {
-        update(ref(db, 'fund_settings'), { [field]: Number(value) });
-    };
-
-    // === 🌟 核心行程資料 (已修復 Day 4 遺漏行程、確保順路邏輯) ===
     const itineraryData = {
         1: { date: "2026/07/03 (五)", title: "台北 ➔ 花蓮 ➔ 台東", desc: "第一天啟程與池上便當！", sections: [ 
             { label: "Morning", places: [ 
@@ -508,6 +376,142 @@ function googleTranslateElementInit() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     let currentLayerGroup = L.featureGroup().addTo(map);
     let routingControl = null;
+
+    // ==========================================
+    // 🌟 Firebase 監聽事件 (在資料準備好後才啟動)
+    // ==========================================
+    const imgRef = ref(db, 'custom_images');
+    onValue(imgRef, (snap) => {
+        window.customImages = snap.val() || {};
+        if(window.currentViewDay) renderDay(window.currentViewDay);
+    });
+
+    const sidePanel = document.getElementById('sidePanel');
+    const dragHandle = document.getElementById('dragHandle');
+    
+    function setInitialMobilePanel() {
+        if(window.innerWidth <= 768) {
+            currentTranslateY = window.innerHeight * 0.45; 
+            sidePanel.style.transform = `translateY(${currentTranslateY}px)`;
+            sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        } else {
+            sidePanel.style.transform = 'none';
+        }
+    }
+    window.addEventListener('resize', setInitialMobilePanel);
+    setInitialMobilePanel();
+
+    dragHandle.addEventListener('touchstart', e => { 
+        if(window.innerWidth > 768) return;
+        startY = e.touches[0].clientY; 
+        sidePanel.style.transition = 'none'; 
+        isDragging = true;
+    }, {passive: true});
+
+    document.addEventListener('touchmove', e => {
+        if (!isDragging) return;
+        let deltaY = e.touches[0].clientY - startY;
+        let newTranslateY = currentTranslateY + deltaY;
+        let maxTranslate = window.innerHeight * 0.80; 
+        if (newTranslateY < 0) newTranslateY = 0; 
+        if (newTranslateY > maxTranslate) newTranslateY = maxTranslate;
+        sidePanel.style.transform = `translateY(${newTranslateY}px)`;
+    }, {passive: true});
+
+    document.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        let deltaY = e.changedTouches[0].clientY - startY;
+        currentTranslateY += deltaY;
+        let vh = window.innerHeight;
+        let maxTranslate = vh * 0.80;
+        if (currentTranslateY < 0) currentTranslateY = 0;
+        if (currentTranslateY > maxTranslate) currentTranslateY = maxTranslate;
+
+        sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        let snapTop = 0, snapMid = vh * 0.45, snapBot = vh * 0.80;
+        let diffTop = Math.abs(currentTranslateY - snapTop);
+        let diffMid = Math.abs(currentTranslateY - snapMid);
+        let diffBot = Math.abs(currentTranslateY - snapBot);
+        
+        let targetTranslate = snapMid;
+        if (diffTop < diffMid && diffTop < diffBot) targetTranslate = snapTop;
+        else if (diffBot < diffMid && diffBot < diffTop) targetTranslate = snapBot;
+        
+        currentTranslateY = targetTranslate;
+        sidePanel.style.transform = `translateY(${currentTranslateY}px)`;
+    });
+
+    function getMyName() { return localStorage.getItem('familyTripName') || ''; }
+
+    // === 開啟地點彈出視窗 ===
+    window.openPlaceModal = function(name, defaultImg, rating, desc) {
+        window.currentModalPlace = name; 
+        const finalImg = window.customImages[name] || defaultImg;
+        document.getElementById('modalName').innerText = name;
+        document.getElementById('modalImg').src = finalImg;
+        document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
+        document.getElementById('modalDesc').innerText = desc;
+        
+        // 🌟 正確的官方 Google Maps 搜尋導航連結
+        let mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+        
+        if (name === "劉家酸菜白肉鍋") {
+            mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("劉家酸菜白肉鍋 中正堂本館")}`;
+        } else if (name.includes("捉鳳凰百年老宅")) {
+            mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("捉鳳凰百年老宅 台南")}`;
+        }
+        
+        document.getElementById('modalNavBtn').href = mapUrl;
+        document.getElementById('detailModal').style.display = 'flex';
+    };
+    
+    window.closeDetailModal = function() { document.getElementById('detailModal').style.display = 'none'; };
+
+    window.changePlaceImage = function() {
+        let newUrl = prompt("請貼上新的圖片網址 (結尾通常是 .jpg 或 .png)：\n\n小提示：你可以在 Google 圖片長按喜歡的照片，選擇「複製圖片連結」。");
+        if (newUrl !== null && newUrl.trim() !== "") {
+            update(ref(db, 'custom_images'), { [window.currentModalPlace]: newUrl.trim() });
+            document.getElementById('modalImg').src = newUrl.trim();
+        }
+    };
+
+    window.day3EggAdded = false;
+    window.openEggModal = function() { document.getElementById('eggModal').style.display = 'flex'; };
+    window.closeEggModal = function() { document.getElementById('eggModal').style.display = 'none'; };
+    window.addEggToItinerary = function() {
+        window.day3EggAdded = true;
+        document.getElementById('eggModal').style.display = 'none';
+        itineraryData[3].sections[0].places = [
+            { time: "09:00", name: "太麻里平交道", rating: "4.3 ★", desc: "神還原日本動漫《灌籃高手》的經典平交道場景！", img: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=400&q=80", lat: 22.6186, lng: 121.0028 }, 
+            { driveTime: "約 15 分鐘", time: "09:30", name: "華源海灣", rating: "4.5 ★", desc: "【秘境彩蛋 🌊】寬闊的沙灘與漸層的太平洋海水藍得不可思議。能拍出絕美「天空之鏡」海景倒影！", img: "https://images.unsplash.com/photo-1518998053401-878c73fd6e66?auto=format&fit=crop&w=400&q=80", lat: 22.6417, lng: 121.0114, isEgg: true },
+            { driveTime: "約 20 分鐘", time: "10:10", name: "多良車站", rating: "4.4 ★", desc: "被譽為台灣最美麗的火車站。站在觀景台上，能捕捉紅色鐵欄杆、復古鐵道與漸層太平洋完美交織的絕景。", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", lat: 22.5085, lng: 120.9592 }, 
+            { driveTime: "約 1.5 小時", time: "12:00", name: "佳珍海鮮餐廳", rating: "4.2 ★", desc: "抵達屏東東港享用豐盛的海鮮午餐，這是一家連黑鮪魚都非常有名的在地知名老字號餐廳。", img: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=400&q=80", lat: 22.4660, lng: 120.4440 }
+        ];
+        renderDay(3);
+    };
+
+    // === Firebase 操作共用邏輯 ===
+    window.editMsg = function(msgId, oldText, msgOwner) {
+        if (msgOwner !== getMyName()) { alert("你只能編輯自己的留言喔！"); return; }
+        const newText = prompt("請輸入修改後的訊息：", oldText);
+        if (newText !== null && newText.trim() !== "") { update(ref(db, 'messages/' + msgId), { text: newText.trim() }); }
+    };
+    window.deleteMsg = function(msgId, msgOwner) {
+        if (msgOwner !== getMyName()) { alert("你只能刪除自己的留言喔！"); return; }
+        if (confirm("確定要刪除這則留言嗎？")) { remove(ref(db, 'messages/' + msgId)); }
+    };
+    window.deleteExp = function(expId, expOwner) {
+        if (expOwner !== getMyName()) { alert("只能刪除自己的記帳喔！"); return; }
+        if (confirm("確定要刪除這筆支出嗎？")) { remove(ref(db, 'expenses/' + expId)); }
+    };
+    window.deleteNote = function(noteId, user) {
+        if (user !== getMyName()) { alert("只能刪除自己新增的注意事項喔！"); return; }
+        if (confirm("確定要刪除這筆注意事項嗎？")) { remove(ref(db, 'notes/' + noteId)); }
+    };
+    window.updateFundSettings = function(field, value) {
+        update(ref(db, 'fund_settings'), { [field]: Number(value) });
+    };
 
     // === 初始化導航列 ===
     function initNav() {
@@ -941,7 +945,9 @@ function googleTranslateElementInit() {
         document.getElementById('expPriceInput').addEventListener('keypress', function (e) { if (e.key === 'Enter') expAction(); });
     }
 
-    initNav(); renderDay(1);
+    // === 啟動應用程式 ===
+    initNav();
+    renderDay(1);
 </script>
 </body>
 </html>
