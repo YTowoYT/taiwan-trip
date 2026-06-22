@@ -487,7 +487,7 @@ function googleTranslateElementInit() {
 
     function getMyName() { return localStorage.getItem('familyTripName') || ''; }
 
-    // === 開啟地點彈出視窗 ===
+        // === 開啟地點彈出視窗 ===
     window.openPlaceModal = function(name, defaultImg, rating, desc) {
         window.currentModalPlace = name; 
         var finalImg = window.customImages[name] || defaultImg;
@@ -496,13 +496,13 @@ function googleTranslateElementInit() {
         document.getElementById('modalRating').innerHTML = '<i class="fa-solid fa-star"></i> ' + rating;
         document.getElementById('modalDesc').innerText = desc;
         
-        // 🌟 正確的官方 Google Maps 搜尋導航連結 (使用純粹的字串相加，完全免疫吃字Bug)
-        var mapUrl = 'http://googleusercontent.com/maps.google.com/maps?q=' + encodeURIComponent(name);
+        // 🌟 終極正確版：Google Maps 官方「直接導航」網址
+        var mapUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(name);
         
         if (name === "劉家酸菜白肉鍋") {
-            mapUrl = 'http://googleusercontent.com/maps.google.com/maps?q=' + encodeURIComponent("劉家酸菜白肉鍋 中正堂本館");
+            mapUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent("劉家酸菜白肉鍋 中正堂本館");
         } else if (name.indexOf("捉鳳凰") !== -1) {
-            mapUrl = 'http://googleusercontent.com/maps.google.com/maps?q=' + encodeURIComponent("捉鳳凰百年老宅 台南");
+            mapUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent("捉鳳凰百年老宅 台南");
         }
         
         document.getElementById('modalNavBtn').href = mapUrl;
