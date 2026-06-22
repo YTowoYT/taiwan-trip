@@ -329,6 +329,9 @@ function googleTranslateElementInit() {
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // ==========================================
+    // 🌟 行程資料宣告放最上層，防當機
+    // ==========================================
     window.customImages = {};
     window.currentViewDay = 1;
 
@@ -413,6 +416,9 @@ function googleTranslateElementInit() {
     var currentLayerGroup = L.featureGroup().addTo(map);
     var routingControl = null;
 
+    // === 🌟 找回失落的變數：Firebase 圖片庫連線 ===
+    const imgRef = ref(db, 'custom_images');
+
     // === Firebase 監聽事件 ===
     onValue(imgRef, function(snap) {
         window.customImages = snap.val() || {};
@@ -495,7 +501,7 @@ function googleTranslateElementInit() {
         
         if (name === "劉家酸菜白肉鍋") {
             mapUrl = 'http://googleusercontent.com/maps.google.com/maps?q=' + encodeURIComponent("劉家酸菜白肉鍋 中正堂本館");
-        } else if (name.indexOf("捉鳳凰百年老宅") !== -1) {
+        } else if (name.indexOf("捉鳳凰") !== -1) {
             mapUrl = 'http://googleusercontent.com/maps.google.com/maps?q=' + encodeURIComponent("捉鳳凰百年老宅 台南");
         }
         
@@ -593,7 +599,7 @@ function googleTranslateElementInit() {
         if(window.innerWidth <= 768) {
             var currentTranslateY = window.innerHeight * 0.45;
             sidePanel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-            sidePanel.style.transform = "translateY(" + currentTranslateY + "px)";
+            sidePanel.style.transform = 'translateY(' + currentTranslateY + 'px)';
         }
     }
     
