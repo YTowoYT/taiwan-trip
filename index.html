@@ -424,11 +424,13 @@ function googleTranslateElementInit() {
     let currentLayerGroup = L.featureGroup().addTo(map);
     let routingControl = null;
 
-    // === Firebase 監聽事件 ===
+        // === Firebase 監聽事件 ===
+    const imgRef = ref(db, 'custom_images'); // 🌟 就是被我漏掉的這行致命宣告！
     onValue(imgRef, (snap) => {
         window.customImages = snap.val() || {};
         if(window.currentViewDay) renderDay(window.currentViewDay);
     });
+
 
     const sidePanel = document.getElementById('sidePanel');
     const dragHandle = document.getElementById('dragHandle');
