@@ -488,15 +488,16 @@ function googleTranslateElementInit() {
         const finalImg = window.customImages[name] || defaultImg;
         document.getElementById('modalName').innerText = name;
         document.getElementById('modalImg').src = finalImg;
-        document.getElementById('modalRating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
+        document.getElementById('modalRating').innerHTML = '<i class="fa-solid fa-star"></i> ' + rating;
         document.getElementById('modalDesc').innerText = desc;
         
-        let mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(name)}`;
+        // 🌟 修正為【絕對正確版】的 Google Maps 官方搜尋網址格式
+        let mapUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name);
         
         if (name === "劉家酸菜白肉鍋") {
-            mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent("劉家酸菜白肉鍋 中正堂本館")}`;
+            mapUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("劉家酸菜白肉鍋 中正堂本館");
         } else if (name.includes("捉鳳凰百年老宅")) {
-            mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent("捉鳳凰百年老宅 台南")}`;
+            mapUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("捉鳳凰百年老宅 台南");
         }
         
         document.getElementById('modalNavBtn').href = mapUrl;
