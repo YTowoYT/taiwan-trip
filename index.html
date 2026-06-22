@@ -496,9 +496,10 @@ function googleTranslateElementInit() {
         document.getElementById('modalRating').innerHTML = '<i class="fa-solid fa-star"></i> ' + rating;
         document.getElementById('modalDesc').innerText = desc;
         
-        // 🌟 終極正確版：Google Maps 官方「直接導航」網址
+        // 🌟 真正的 Google Maps 官方路線規劃網址
         var mapUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(name);
         
+        // 針對特定地點，加上更精確的地區關鍵字
         if (name === "劉家酸菜白肉鍋") {
             mapUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent("劉家酸菜白肉鍋 中正堂本館");
         } else if (name.indexOf("捉鳳凰") !== -1) {
