@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta property="og:title" content="2026 暑假南台灣行程表">
+  <meta property="og:title" content="2026 暑假南台灣行程表 V3">
   <meta property="og:description" content="點選此處以開啟此連結。">
-  <title>2026 暑假南台灣行程表</title>
+  <title>2026 暑假南台灣行程表 V3</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -625,7 +625,7 @@
               {
                 driveTime: "約 30 分鐘",
                 time: "19:00",
-                name: "大東・永大夜市"
+                name: "大東・永大夜市",
                 rating: "4.2 ★",
                 desc: "台南夜市吃透透，依星期幾決定去哪一個。",
                 img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80",
@@ -844,9 +844,20 @@
       return localStorage.getItem('familyTripName') || '';
     }
 
+    // Firebase Realtime Database 的 key 不能包含 . # $ [ ] /
+    // 所以自訂圖片 key 統一做安全轉換，避免「大東・永大夜市」這類名稱造成換圖失效。
+    function getSafeImageKey(name) {
+      return String(name).replace(/[.#$/\[\]]/g, '・');
+    }
+
+    function getCustomImageForPlace(name) {
+      var safeKey = getSafeImageKey(name);
+      return window.customImages[safeKey] || window.customImages[name] || null;
+    }
+
     window.openPlaceModal = function(name, defaultImg, rating, desc) {
       window.currentModalPlace = name;
-      var finalImg = window.customImages[name] || defaultImg;
+      var finalImg = getCustomImageForPlace(name) || defaultImg;
       document.getElementById('modalName').innerText = name;
       document.getElementById('modalImg').src = finalImg;
       document.getElementById('modalRating').innerHTML = '<i class="fa-solid fa-star"></i> ' + rating;
@@ -882,7 +893,7 @@
       var newUrl = prompt("請貼上新的圖片網址 (結尾通常是 .jpg 或 .png)：\n\n小提示：你可以在 Google 圖片長按喜歡的照片，選擇「複製圖片連結」。");
       if (newUrl !== null && newUrl.trim() !== "") {
         var updateData = {};
-        updateData[window.currentModalPlace] = newUrl.trim();
+        updateData[getSafeImageKey(window.currentModalPlace)] = newUrl.trim();
         update(ref(db, 'custom_images'), updateData);
         document.getElementById('modalImg').src = newUrl.trim();
       }
@@ -1091,7 +1102,7 @@
             html += '<div class="drive-time-line"><i class="fa-solid fa-car-side"></i> ' + p.driveTime + '</div>';
           }
 
-          var finalImg = window.customImages[p.name] || p.img;
+          var finalImg = getCustomImageForPlace(p.name) || p.img;
           var safeName = safeForOnclick(p.name);
           var safeImg = safeForOnclick(p.img);
           var safeRating = safeForOnclick(p.rating);
