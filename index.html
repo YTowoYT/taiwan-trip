@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta property="og:title" content="2026 暑假南台灣行程表 V3">
+  <meta property="og:title" content="2026 暑假南台灣行程表">
   <meta property="og:description" content="點選此處以開啟此連結。">
-  <title>2026 暑假南台灣行程表 V3</title>
+  <title>2026 暑假南台灣行程表</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -184,6 +184,452 @@
     .lock-btn:hover { background: #0284c7; transform: translateY(-2px); }
     .lock-error { color: #ef4444; font-size: 14px; font-weight: 700; margin-top: 15px; display: none; background: #fee2e2; padding: 8px; border-radius: 10px; }
 
+
+
+    /* === 新版整體介面 Header / 想吃清單 === */
+    .app-header {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 420px;
+      min-height: 54px;
+      z-index: 1200;
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(226,232,240,0.9);
+      border-radius: 22px;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      box-sizing: border-box;
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #dcfce7, #e0f2fe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.1;
+      letter-spacing: 0.3px;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 700;
+      margin-top: 3px;
+      white-space: nowrap;
+    }
+
+    .user-chip {
+      border: none;
+      background: #0f172a;
+      color: white;
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-size: 13px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(15,23,42,0.18);
+      max-width: 160px;
+      white-space: nowrap;
+    }
+
+    .user-chip.is-empty {
+      background: #f97316;
+      box-shadow: 0 8px 18px rgba(249,115,22,0.22);
+    }
+
+    .top-nav {
+      top: 88px !important;
+      left: 16px !important;
+      right: 420px;
+      padding-right: 0 !important;
+      gap: 10px !important;
+    }
+
+    .nav-pill {
+      min-height: 36px;
+      padding: 9px 16px !important;
+      border-radius: 18px !important;
+      font-weight: 900 !important;
+    }
+
+    .nav-pill.food-btn { background: #ffedd5; color: #9a3412; }
+    .nav-pill.food-btn.active { background: #f97316; color: white; }
+
+    .side-panel {
+      width: 410px !important;
+      border-radius: 26px !important;
+      background: rgba(248,250,252,0.96) !important;
+      backdrop-filter: blur(12px);
+    }
+
+    .food-page-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-top: 4px;
+    }
+
+    .food-form-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(15,23,42,0.07);
+    }
+
+    .food-form-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .food-form-card select,
+    .food-form-card input {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1.5px solid #dbe3ef;
+      border-radius: 16px;
+      padding: 12px 13px;
+      font-size: 14px;
+      font-weight: 700;
+      outline: none;
+      background: white;
+      margin-bottom: 10px;
+    }
+
+    .food-form-card select:focus,
+    .food-form-card input:focus {
+      border-color: #fb923c;
+      box-shadow: 0 0 0 4px rgba(251,146,60,0.15);
+    }
+
+    .food-submit-btn {
+      width: 100%;
+      border: none;
+      border-radius: 17px;
+      padding: 13px;
+      background: linear-gradient(135deg, #fb7185, #f97316);
+      color: white;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(249,115,22,0.24);
+    }
+
+    .food-submit-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .food-help-card {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 20px;
+      padding: 13px 14px;
+      color: #1e40af;
+      font-size: 13px;
+      line-height: 1.7;
+      font-weight: 700;
+    }
+
+    .food-day-section {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .food-day-label {
+      border-radius: 18px;
+      min-height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 900;
+      color: #0f172a;
+      border: 1px solid rgba(226,232,240,0.9);
+      background: #f8fafc;
+    }
+
+    .food-day-label.day-1 { background: #fef3c7; color: #92400e; }
+    .food-day-label.day-2 { background: #dcfce7; color: #166534; }
+    .food-day-label.day-3 { background: #dbeafe; color: #1d4ed8; }
+    .food-day-label.day-4 { background: #f3e8ff; color: #6b21a8; }
+    .food-day-label.day-5 { background: #ffe4e6; color: #be123c; }
+    .food-day-label.day-6 { background: #ccfbf1; color: #0f766e; }
+    .food-day-label.day-any { background: #f1f5f9; color: #475569; }
+
+    .food-card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .food-wish-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 10px;
+      box-shadow: 0 6px 16px rgba(15,23,42,0.06);
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .food-wish-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: #fed7aa;
+    }
+
+    .food-wish-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
+    .food-wish-meta {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .food-wish-actions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .food-wish-actions a,
+    .food-wish-actions button,
+    .today-food-map {
+      border: none;
+      border-radius: 13px;
+      padding: 9px 8px;
+      font-size: 12px;
+      font-weight: 900;
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .food-map-btn { background: #dbeafe; color: #1d4ed8; }
+    .food-vote-btn { background: #ffe4e6; color: #be123c; }
+    .food-vote-btn.voted { background: #be123c; color: white; }
+    .food-img-btn { background: #e0f2fe; color: #0369a1; }
+    .food-del-btn { background: #fee2e2; color: #991b1b; }
+
+    .food-empty {
+      background: white;
+      border: 1px dashed #cbd5e1;
+      border-radius: 16px;
+      padding: 14px;
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .today-food-box {
+      margin-top: 8px;
+      margin-bottom: 28px;
+      padding: 15px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #fff7ed, #fffbeb);
+      border: 1px solid #fed7aa;
+      box-shadow: 0 8px 20px rgba(249,115,22,0.08);
+    }
+
+    .today-food-title {
+      color: #9a3412;
+      font-size: 15px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .today-food-item {
+      background: white;
+      border: 1px solid #ffedd5;
+      border-radius: 16px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      gap: 9px;
+      align-items: center;
+      margin-bottom: 9px;
+    }
+
+    .today-food-item img {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+
+    .today-food-name {
+      font-size: 13px;
+      color: #0f172a;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .today-food-vote {
+      font-size: 12px;
+      color: #be123c;
+      font-weight: 900;
+      margin-top: 3px;
+    }
+
+    .today-food-map {
+      background: #dbeafe;
+      color: #1d4ed8;
+      white-space: nowrap;
+    }
+
+    .name-notice {
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+      border-radius: 16px;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      font-weight: 700;
+      margin: 12px 0;
+    }
+
+    @media (max-width: 768px) {
+      .app-header {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        border-radius: 20px;
+        min-height: 54px;
+      }
+      .brand-subtitle { display: none; }
+      .top-nav {
+        top: 76px !important;
+        left: 10px !important;
+        right: 10px !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        scrollbar-width: none;
+      }
+      .top-nav::-webkit-scrollbar { display: none; }
+      .nav-pill { flex-shrink: 0; }
+      .side-panel {
+        width: 100% !important;
+        border-radius: 26px 26px 0 0 !important;
+      }
+      .food-day-section {
+        grid-template-columns: 66px 1fr;
+        gap: 9px;
+      }
+      .food-day-label {
+        min-height: 72px;
+        font-size: 13px;
+      }
+      .food-wish-card {
+        grid-template-columns: 56px 1fr;
+      }
+      .food-wish-img {
+        width: 56px;
+        height: 56px;
+      }
+      .today-food-item {
+        grid-template-columns: 42px 1fr;
+      }
+      .today-food-map {
+        grid-column: 1 / -1;
+      }
+    }
+
+    /* === 防止按鈕與互動元件被反白選取 === */
+    button,
+    a,
+    .nav-pill,
+    .place-card,
+    .place-time-btn,
+    .map-marker,
+    .easter-egg-btn,
+    .egg-badge,
+    .msg-action-btn,
+    .note-del-btn,
+    #sendBtn,
+    #addNoteBtn,
+    #addExpBtn,
+    .lock-btn,
+    .btn-nav,
+    .modal-close-icon,
+    .modal-edit-img-icon,
+    .drag-handle-area,
+    .drag-handle {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    button,
+    .nav-pill,
+    .place-card,
+    .place-time-btn,
+    .btn-nav {
+      -webkit-user-drag: none;
+    }
+
     @media (max-width: 768px) {
       .app-container { flex-direction: column; }
       .map-area { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; z-index: 1; }
@@ -233,6 +679,21 @@
   <div class="app-container">
     <div class="map-area" id="mapArea">
       <div id="map"></div>
+
+      <div class="app-header">
+        <div class="brand-box">
+          <div class="brand-icon">🧭</div>
+          <div>
+            <div class="brand-title">旅遊小幫手</div>
+            <div class="brand-subtitle">2026 暑假南台灣行程</div>
+          </div>
+        </div>
+        <button class="user-chip" id="userChip" onclick="window.setUserNameOnce()">
+          <i class="fa-solid fa-user"></i>
+          <span id="userChipText">設定名字</span>
+        </button>
+      </div>
+
       <div class="top-nav" id="navContainer">
         <div id="google_translate_element"></div>
       </div>
@@ -1010,6 +1471,7 @@
       }
 
       var tabs = [
+        { text: '<i class="fa-solid fa-bowl-food"></i> 想吃清單', class: 'food-btn', action: renderFoodWishlist },
         { text: '注意事項', class: 'notes-btn', action: renderNotes },
         { text: '<i class="fa-regular fa-comments"></i> 留言板', class: 'chat-btn', action: renderChat },
         { text: '<i class="fa-solid fa-file-invoice-dollar"></i> 記帳區', class: 'acc-btn', action: renderAccounting }
@@ -1136,7 +1598,8 @@
         html += '</div>';
       });
 
-      document.getElementById('panelContent').innerHTML = html;
+      document.getElementById('panelContent').innerHTML = html + '<div id="todayFoodArea"></div>';
+      renderTodayFoodSummary(day);
 
       if (coords.length > 1) {
         routingControl = L.Routing.control({
@@ -1155,7 +1618,7 @@
 
     function renderNotes() {
       window.currentViewDay = null;
-      var myName = getMyName() || '未綁定名字 (請先至留言板輸入)';
+      var myName = getMyName() || '未綁定名字 (請先點右上角設定)';
       var disabledAttr = !getMyName() ? 'disabled' : '';
 
       var html =
@@ -1231,38 +1694,31 @@
 
     function renderChat() {
       window.currentViewDay = null;
+      if (window.foodSummaryUnsub) {
+        window.foodSummaryUnsub();
+        window.foodSummaryUnsub = null;
+      }
+
+      var myName = getMyName();
+      var disabledAttr = myName ? '' : 'disabled';
+      var nameNotice = myName
+        ? '<div class="name-notice">目前使用者：<strong>' + escapeHtml(myName) + '</strong>。名字已鎖定，會連動留言、記帳、注意事項與投票。</div>'
+        : '<div class="name-notice">請先點右上角「設定名字」。名字確認後會連動留言、代墊款與投票紀錄，頁面上不提供更改。</div>';
 
       var html =
         '<div class="day-label" style="color:#166534; margin-top:0;">LIVE CHAT</div>' +
         '<h1 class="route-title" style="margin-bottom:0;">互動留言板</h1>' +
+        nameNotice +
         '<div class="chat-container">' +
           '<div class="chat-messages" id="chatMsgs">連線中...</div>' +
           '<div class="chat-input-area">' +
-            '<input type="text" id="nameInput" placeholder="你的名字" title="輸入一次後將自動綁定">' +
-            '<input type="text" id="msgInput" placeholder="輸入訊息...">' +
-            '<button id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>' +
+            '<input type="text" id="msgInput" placeholder="' + (myName ? '輸入訊息...' : '請先設定名字') + '" ' + disabledAttr + '>' +
+            '<button id="sendBtn" ' + disabledAttr + '><i class="fa-solid fa-paper-plane"></i></button>' +
           '</div>' +
         '</div>';
 
       document.getElementById('panelContent').innerHTML = html;
       renderAllDaysMap();
-
-      var myName = getMyName();
-      var nameInput = document.getElementById('nameInput');
-
-      if (myName) {
-        nameInput.value = myName;
-        nameInput.readOnly = true;
-        nameInput.classList.add('locked');
-        nameInput.ondblclick = function() {
-          if (confirm("你要更改綁定的名字嗎？")) {
-            this.readOnly = false;
-            this.classList.remove('locked');
-            this.value = '';
-            localStorage.removeItem('familyTripName');
-          }
-        };
-      }
 
       var msgsRef = ref(db, 'messages');
 
@@ -1296,8 +1752,8 @@
 
           msgList.innerHTML +=
             '<div class="' + bubbleClass + '">' + actionBtnsHTML +
-              '<div class="msg-user"><i class="fa-solid fa-user-circle"></i> ' + userDisplay + '</div>' +
-              '<div>' + (m.text || '') + '</div>' +
+              '<div class="msg-user"><i class="fa-solid fa-user-circle"></i> ' + escapeHtml(userDisplay) + '</div>' +
+              '<div>' + escapeHtml(m.text || '') + '</div>' +
               '<div class="msg-time">' + timeStr + '</div>' +
             '</div>';
         }
@@ -1308,9 +1764,14 @@
       });
 
       var sendAction = function() {
-        var currentNameInput = document.getElementById('nameInput');
-        var name = currentNameInput.value.trim();
-        var text = document.getElementById('msgInput').value.trim();
+        var name = getMyName();
+        var textInput = document.getElementById('msgInput');
+        var text = textInput ? textInput.value.trim() : '';
+
+        if (!name) {
+          alert("請先點右上角設定名字。");
+          return;
+        }
 
         if (text === '//名單' || text === '／／名單') {
           get(ref(db, 'messages')).then(function(snap1) {
@@ -1334,34 +1795,26 @@
           return;
         }
 
-        if (!name) {
-          alert("請先輸入你的名字喔！");
-          currentNameInput.focus();
-          return;
-        }
-
         if (text) {
-          if (!currentNameInput.readOnly) {
-            localStorage.setItem('familyTripName', name);
-            currentNameInput.readOnly = true;
-            currentNameInput.classList.add('locked');
-          }
-
           push(ref(db, 'messages'), { user: name, text: text, timestamp: serverTimestamp() });
           document.getElementById('msgInput').value = '';
           document.getElementById('msgInput').focus();
         }
       };
 
-      document.getElementById('sendBtn').onclick = sendAction;
-      document.getElementById('msgInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendAction();
-      });
+      var sendBtn = document.getElementById('sendBtn');
+      var msgInput = document.getElementById('msgInput');
+      if (sendBtn) sendBtn.onclick = sendAction;
+      if (msgInput) {
+        msgInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') sendAction();
+        });
+      }
     }
 
     function renderAccounting() {
       window.currentViewDay = null;
-      var myName = getMyName() || '未綁定(請至留言板輸入)';
+      var myName = getMyName() || '未綁定(請點右上角設定)';
       var disabledAttr = !getMyName() ? 'disabled' : '';
 
       var html =
@@ -1546,7 +1999,28 @@
       });
     }
 
+
+    // 清除手機/電腦快速點擊造成的文字反白選取
+    document.addEventListener('selectionchange', function() {
+      var active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+      var selection = window.getSelection && window.getSelection();
+      if (selection && selection.toString()) {
+        var node = selection.anchorNode;
+        var element = node && (node.nodeType === 3 ? node.parentElement : node);
+        if (element && element.closest && element.closest('button, a, .nav-pill, .place-card, .place-time-btn, .map-marker, .btn-nav, .lock-btn')) {
+          selection.removeAllRanges();
+        }
+      }
+    });
+
+    document.addEventListener('touchend', function() {
+      var selection = window.getSelection && window.getSelection();
+      if (selection) selection.removeAllRanges();
+    }, { passive: true });
+
     initNav();
+    renderUserChip();
     renderDay(1);
   </script>
 </body>
