@@ -241,6 +241,17 @@
       white-space: nowrap;
     }
 
+
+    .app-header,
+    .app-header * {
+      pointer-events: auto;
+    }
+
+    .user-chip {
+      position: relative;
+      z-index: 2001;
+    }
+
     .user-chip {
       border: none;
       background: #0f172a;
@@ -548,6 +559,79 @@
       margin: 12px 0;
     }
 
+
+    .name-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(15,23,42,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .name-modal.hidden { display: none; }
+
+    .name-modal-card {
+      width: min(360px, 100%);
+      background: white;
+      border-radius: 26px;
+      padding: 20px;
+      box-shadow: 0 24px 70px rgba(15,23,42,0.3);
+      border: 1px solid #e2e8f0;
+    }
+
+    .name-modal-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .name-modal-desc {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 14px;
+      font-weight: 700;
+    }
+
+    #nameModalInput {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 12px 13px;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    #nameModalInput:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 4px rgba(249,115,22,0.16);
+    }
+
+    .name-modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .name-modal-actions button {
+      border: none;
+      border-radius: 16px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    #nameModalCancel { background: #f1f5f9; color: #475569; }
+    #nameModalConfirm { background: #f97316; color: white; }
+
     @media (max-width: 768px) {
       .app-header {
         top: 10px;
@@ -688,7 +772,7 @@
             <div class="brand-subtitle">2026 暑假南台灣行程</div>
           </div>
         </div>
-        <button class="user-chip" id="userChip" onclick="window.setUserNameOnce()">
+        <button class="user-chip" id="userChip" type="button">
           <i class="fa-solid fa-user"></i>
           <span id="userChipText">設定名字</span>
         </button>
@@ -1314,6 +1398,71 @@
     function getCustomImageForPlace(name) {
       var safeKey = getSafeImageKey(name);
       return window.customImages[safeKey] || window.customImages[name] || null;
+    }
+
+    window.setUserNameOnce = function() {
+      var oldName = getMyName();
+      if (oldName) {
+        alert("名字已鎖定為「" + oldName + "」。\n這個名字會連動留言、注意事項、代墊款與投票紀錄，所以不能在頁面上直接更改。");
+        return;
+      }
+
+      var modal = document.getElementById('nameModal');
+      var input = document.getElementById('nameModalInput');
+      if (!modal || !input) {
+        var fallbackName = prompt("請輸入你的名字：");
+        if (!fallbackName || !fallbackName.trim()) return;
+        localStorage.setItem('familyTripName', fallbackName.trim());
+        renderUserChip();
+        if (window.currentViewDay) renderDay(window.currentViewDay);
+        return;
+      }
+
+      modal.classList.remove('hidden');
+      input.value = '';
+      setTimeout(function() { input.focus(); }, 80);
+    };
+
+    function closeNameModal() {
+      var modal = document.getElementById('nameModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function confirmNameModal() {
+      var input = document.getElementById('nameModalInput');
+      var name = input ? input.value.trim() : '';
+      if (!name) {
+        alert("請輸入名字。");
+        return;
+      }
+
+      localStorage.setItem('familyTripName', name);
+      closeNameModal();
+      renderUserChip();
+
+      if (window.currentViewDay) {
+        renderDay(window.currentViewDay);
+      }
+    }
+
+    function initNameControls() {
+      var chip = document.getElementById('userChip');
+      var cancel = document.getElementById('nameModalCancel');
+      var confirm = document.getElementById('nameModalConfirm');
+      var input = document.getElementById('nameModalInput');
+
+      if (chip && !chip.dataset.boundNameClick) {
+        chip.addEventListener('click', window.setUserNameOnce);
+        chip.dataset.boundNameClick = '1';
+      }
+      if (cancel) cancel.addEventListener('click', closeNameModal);
+      if (confirm) confirm.addEventListener('click', confirmNameModal);
+      if (input) {
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') confirmNameModal();
+          if (e.key === 'Escape') closeNameModal();
+        });
+      }
     }
 
     window.openPlaceModal = function(name, defaultImg, rating, desc) {
@@ -2020,8 +2169,22 @@
     }, { passive: true });
 
     initNav();
+    initNameControls();
     renderUserChip();
     renderDay(1);
   </script>
+
+    <div id="nameModal" class="name-modal hidden">
+      <div class="name-modal-card">
+        <div class="name-modal-title">設定名字</div>
+        <div class="name-modal-desc">名字確認後會連動留言、代墊款、注意事項與投票紀錄，頁面上不提供更改。</div>
+        <input type="text" id="nameModalInput" placeholder="請輸入你的名字">
+        <div class="name-modal-actions">
+          <button type="button" id="nameModalCancel">取消</button>
+          <button type="button" id="nameModalConfirm">確認</button>
+        </div>
+      </div>
+    </div>
+
 </body>
 </html>
