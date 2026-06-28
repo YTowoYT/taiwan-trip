@@ -5301,6 +5301,58 @@
       }
     }
 
+
+    /* === Day1-6 行程白色面板：真正可拖曳修正版 === */
+    body:not(.info-mode) .app-container:not(.info-mode) #sidePanel {
+      --day-panel-height: 52vh;
+    }
+
+    body:not(.info-mode) .app-container:not(.info-mode) #sidePanel.day-real-drag-panel {
+      height: var(--day-panel-height) !important;
+      max-height: var(--day-panel-height) !important;
+      min-height: 34vh !important;
+      overflow: hidden !important;
+      transition: height .18s ease, max-height .18s ease !important;
+    }
+
+    body:not(.info-mode) .app-container:not(.info-mode) #sidePanel.day-real-dragging {
+      transition: none !important;
+    }
+
+    body:not(.info-mode) .app-container:not(.info-mode) #sidePanel .day-real-drag-handle {
+      width: 70px !important;
+      height: 7px !important;
+      border-radius: 999px !important;
+      background: #cbd5e1 !important;
+      margin: 10px auto 14px !important;
+      flex: 0 0 auto !important;
+      cursor: ns-resize !important;
+      touch-action: none !important;
+      opacity: .95 !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.75) !important;
+    }
+
+    body:not(.info-mode) .app-container:not(.info-mode) #panelContent {
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      height: 100% !important;
+      max-height: 100% !important;
+    }
+
+    @media (max-width: 768px) {
+      body:not(.info-mode) .app-container:not(.info-mode) #sidePanel.day-real-drag-panel {
+        position: absolute !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        width: 100% !important;
+        border-radius: 26px 26px 0 0 !important;
+        z-index: 1000 !important;
+        transform: none !important;
+      }
+    }
+
 </style>
 </head>
 
@@ -7348,6 +7400,159 @@
 
         setTimeout(fixDayPanelDisplay, 500);
         setTimeout(fixDayPanelDisplay, 1500);
+      })();
+    </script>
+
+
+    <script>
+      /* === Day1-6 行程白色面板：真正可拖曳 JS === */
+      (function() {
+        var MIN_VH = 34;
+        var MID_VH = 52;
+        var MAX_VH = 88;
+        var isDragging = false;
+        var startY = 0;
+        var startVH = MID_VH;
+
+        function isDayMode() {
+          var app = document.querySelector('.app-container');
+          return app && !app.classList.contains('info-mode') && !document.body.classList.contains('info-mode');
+        }
+
+        function getPanel() {
+          return document.getElementById('sidePanel');
+        }
+
+        function getPanelVH(panel) {
+          var rect = panel.getBoundingClientRect();
+          return (rect.height / window.innerHeight) * 100;
+        }
+
+        function setPanelVH(panel, vh) {
+          var next = Math.max(MIN_VH, Math.min(MAX_VH, vh));
+          panel.style.setProperty('--day-panel-height', next + 'vh');
+          panel.style.height = next + 'vh';
+          panel.style.maxHeight = next + 'vh';
+        }
+
+        function prepareDayPanel() {
+          var app = document.querySelector('.app-container');
+          var panel = getPanel();
+          var content = document.getElementById('panelContent');
+
+          if (!app || !panel || !content || !isDayMode()) return;
+
+          panel.classList.remove('full-info-panel');
+          panel.classList.add('day-real-drag-panel');
+
+          panel.style.display = 'flex';
+          panel.style.visibility = 'visible';
+          panel.style.opacity = '1';
+
+          if (window.innerWidth <= 768) {
+            panel.style.transform = 'none';
+          }
+
+          var oldHandle = panel.querySelector('.day-real-drag-handle');
+          if (!oldHandle) {
+            oldHandle = document.createElement('div');
+            oldHandle.className = 'day-real-drag-handle';
+            oldHandle.setAttribute('aria-label', '拖曳調整行程面板高度');
+            panel.insertBefore(oldHandle, content);
+          }
+
+          if (!panel.dataset.realDragDefault) {
+            setPanelVH(panel, MID_VH);
+            panel.dataset.realDragDefault = '1';
+          }
+
+          bindHandle(oldHandle, panel);
+        }
+
+        function bindHandle(handle, panel) {
+          if (handle.dataset.realDragBound === '1') return;
+          handle.dataset.realDragBound = '1';
+
+          handle.addEventListener('pointerdown', function(e) {
+            if (!isDayMode()) return;
+
+            isDragging = true;
+            startY = e.clientY;
+            startVH = getPanelVH(panel);
+            panel.classList.add('day-real-dragging');
+
+            try {
+              handle.setPointerCapture(e.pointerId);
+            } catch (err) {}
+
+            e.preventDefault();
+          }, { passive: false });
+
+          handle.addEventListener('pointermove', function(e) {
+            if (!isDragging) return;
+
+            var movePx = startY - e.clientY;
+            var moveVH = (movePx / window.innerHeight) * 100;
+            setPanelVH(panel, startVH + moveVH);
+
+            e.preventDefault();
+          }, { passive: false });
+
+          function stopDrag(e) {
+            if (!isDragging) return;
+
+            isDragging = false;
+            panel.classList.remove('day-real-dragging');
+
+            var current = getPanelVH(panel);
+            var target = MID_VH;
+
+            if (current < 43) target = MIN_VH;
+            else if (current > 70) target = MAX_VH;
+            else target = MID_VH;
+
+            setPanelVH(panel, target);
+
+            try {
+              handle.releasePointerCapture(e.pointerId);
+            } catch (err) {}
+          }
+
+          handle.addEventListener('pointerup', stopDrag);
+          handle.addEventListener('pointercancel', stopDrag);
+        }
+
+        function watchDayButtons() {
+          document.addEventListener('click', function(e) {
+            var target = e.target && e.target.closest ? e.target.closest('.nav-pill') : null;
+            if (!target) return;
+
+            var txt = target.textContent || '';
+            if (/Day\s*[1-6]/i.test(txt)) {
+              setTimeout(prepareDayPanel, 80);
+              setTimeout(prepareDayPanel, 300);
+              setTimeout(prepareDayPanel, 800);
+            }
+          }, true);
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function() {
+            prepareDayPanel();
+            watchDayButtons();
+            setTimeout(prepareDayPanel, 600);
+            setTimeout(prepareDayPanel, 1400);
+          });
+        } else {
+          prepareDayPanel();
+          watchDayButtons();
+          setTimeout(prepareDayPanel, 600);
+          setTimeout(prepareDayPanel, 1400);
+        }
+
+        window.addEventListener('resize', function() {
+          setTimeout(prepareDayPanel, 100);
+        });
       })();
     </script>
 
