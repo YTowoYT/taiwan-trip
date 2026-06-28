@@ -5353,6 +5353,116 @@
       }
     }
 
+
+    /* === Day1-6 白色行程面板：接管原本灰色把手拖曳版 === */
+    @media (max-width: 768px) {
+      body:not(.info-mode) .app-container:not(.info-mode) #sidePanel {
+        position: absolute !important;
+        top: 8vh !important;
+        bottom: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 92vh !important;
+        max-height: 92vh !important;
+        min-height: 92vh !important;
+        border-radius: 28px 28px 0 0 !important;
+        z-index: 1000 !important;
+        display: flex !important;
+        overflow: hidden !important;
+        transform: translateY(var(--day-sheet-y, 40vh)) !important;
+        transition: transform .22s cubic-bezier(.22,.8,.25,1) !important;
+        will-change: transform !important;
+      }
+
+      body:not(.info-mode) .app-container:not(.info-mode) #sidePanel.day-sheet-dragging {
+        transition: none !important;
+      }
+
+      body:not(.info-mode) .app-container:not(.info-mode) #dragHandle {
+        display: flex !important;
+        height: 34px !important;
+        padding: 10px 0 8px !important;
+        background: transparent !important;
+        touch-action: none !important;
+        cursor: ns-resize !important;
+        flex-shrink: 0 !important;
+        z-index: 20 !important;
+      }
+
+      body:not(.info-mode) .app-container:not(.info-mode) #dragHandle .drag-handle {
+        width: 64px !important;
+        height: 6px !important;
+        border-radius: 999px !important;
+        background: #cbd5e1 !important;
+      }
+
+      body:not(.info-mode) .app-container:not(.info-mode) #panelContent {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        height: auto !important;
+        max-height: none !important;
+        flex: 1 1 auto !important;
+      }
+    }
+
+
+    /* === Day1-6 白色行程面板：整片面板可拖曳 + 隱藏重複灰點 === */
+    @media (max-width: 768px) {
+      body:not(.info-mode) .app-container:not(.info-mode) #sidePanel .day-panel-handle,
+      body:not(.info-mode) .app-container:not(.info-mode) #sidePanel .day-real-drag-handle {
+        display: none !important;
+      }
+
+      body:not(.info-mode) .app-container:not(.info-mode) #sidePanel #dragHandle {
+        display: flex !important;
+        height: 34px !important;
+        padding: 10px 0 8px !important;
+        background: transparent !important;
+        touch-action: none !important;
+        cursor: ns-resize !important;
+        flex-shrink: 0 !important;
+        z-index: 20 !important;
+      }
+
+      body:not(.info-mode) .app-container:not(.info-mode) #sidePanel #dragHandle .drag-handle {
+        width: 64px !important;
+        height: 6px !important;
+        border-radius: 999px !important;
+        background: #cbd5e1 !important;
+      }
+
+      body:not(.info-mode) .app-container:not(.info-mode) #sidePanel.day-anywhere-drag-panel {
+        position: absolute !important;
+        top: 8vh !important;
+        bottom: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 92vh !important;
+        max-height: 92vh !important;
+        min-height: 92vh !important;
+        border-radius: 28px 28px 0 0 !important;
+        z-index: 1000 !important;
+        display: flex !important;
+        overflow: hidden !important;
+        transform: translateY(var(--day-sheet-y, 40vh)) !important;
+        transition: transform .2s cubic-bezier(.22,.8,.25,1) !important;
+        will-change: transform !important;
+        touch-action: pan-y !important;
+      }
+
+      body:not(.info-mode) .app-container:not(.info-mode) #sidePanel.day-anywhere-dragging {
+        transition: none !important;
+      }
+
+      body:not(.info-mode) .app-container:not(.info-mode) #panelContent {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex: 1 1 auto !important;
+      }
+    }
+
 </style>
 </head>
 
@@ -7553,6 +7663,445 @@
         window.addEventListener('resize', function() {
           setTimeout(prepareDayPanel, 100);
         });
+      })();
+    </script>
+
+
+    <script>
+      /* === Day1-6 白色行程面板：接管原本灰色把手拖曳 JS === */
+      (function() {
+        var startY = 0;
+        var startSheetY = 0;
+        var dragging = false;
+
+        function app() {
+          return document.querySelector('.app-container');
+        }
+
+        function panel() {
+          return document.getElementById('sidePanel');
+        }
+
+        function handle() {
+          return document.getElementById('dragHandle');
+        }
+
+        function isMobile() {
+          return window.innerWidth <= 768;
+        }
+
+        function isDayMode() {
+          var a = app();
+          return isMobile() && a && !a.classList.contains('info-mode') && !document.body.classList.contains('info-mode');
+        }
+
+        function clamp(n, min, max) {
+          return Math.max(min, Math.min(max, n));
+        }
+
+        function getCurrentY(p) {
+          var value = getComputedStyle(p).getPropertyValue('--day-sheet-y').trim();
+          if (value && value.indexOf('vh') > -1) {
+            return window.innerHeight * parseFloat(value) / 100;
+          }
+
+          var transform = getComputedStyle(p).transform;
+          if (transform && transform !== 'none') {
+            var nums = transform.match(/matrix.*\((.+)\)/);
+            if (nums && nums[1]) {
+              var parts = nums[1].split(',');
+              return parseFloat(parts[5] || 0) || 0;
+            }
+          }
+
+          return window.innerHeight * 0.40;
+        }
+
+        function setY(p, yPx) {
+          var minY = 0;
+          var maxY = window.innerHeight * 0.58;
+          var y = clamp(yPx, minY, maxY);
+          p.style.setProperty('--day-sheet-y', y + 'px');
+          p.style.transform = 'translateY(' + y + 'px)';
+        }
+
+        function snapY(p) {
+          var current = getCurrentY(p);
+          var vh = window.innerHeight;
+
+          var top = 0;
+          var mid = vh * 0.40;
+          var low = vh * 0.58;
+
+          var dTop = Math.abs(current - top);
+          var dMid = Math.abs(current - mid);
+          var dLow = Math.abs(current - low);
+
+          var target = mid;
+          if (dTop <= dMid && dTop <= dLow) target = top;
+          else if (dLow <= dTop && dLow <= dMid) target = low;
+
+          setY(p, target);
+        }
+
+        function prepare() {
+          var p = panel();
+          var h = handle();
+
+          if (!p || !h || !isDayMode()) return;
+
+          p.classList.add('day-sheet-takeover');
+          p.classList.remove('full-info-panel');
+          p.style.display = 'flex';
+          p.style.visibility = 'visible';
+          p.style.opacity = '1';
+
+          if (!p.dataset.sheetReady) {
+            setY(p, window.innerHeight * 0.40);
+            p.dataset.sheetReady = '1';
+          }
+
+          bind();
+        }
+
+        function bind() {
+          var h = handle();
+          if (!h || h.dataset.sheetTakeoverBound === '1') return;
+          h.dataset.sheetTakeoverBound = '1';
+
+          function down(clientY, e) {
+            if (!isDayMode()) return;
+
+            var p = panel();
+            if (!p) return;
+
+            dragging = true;
+            startY = clientY;
+            startSheetY = getCurrentY(p);
+            p.classList.add('day-sheet-dragging');
+
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }
+
+          function move(clientY, e) {
+            if (!dragging) return;
+
+            var p = panel();
+            if (!p) return;
+
+            var delta = clientY - startY;
+            setY(p, startSheetY + delta);
+
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }
+
+          function up(e) {
+            if (!dragging) return;
+
+            var p = panel();
+            if (!p) return;
+
+            dragging = false;
+            p.classList.remove('day-sheet-dragging');
+            snapY(p);
+
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }
+
+          h.addEventListener('touchstart', function(e) {
+            if (!e.touches || !e.touches[0]) return;
+            down(e.touches[0].clientY, e);
+          }, { passive: false });
+
+          window.addEventListener('touchmove', function(e) {
+            if (!e.touches || !e.touches[0]) return;
+            move(e.touches[0].clientY, e);
+          }, { passive: false });
+
+          window.addEventListener('touchend', up, { passive: false });
+          window.addEventListener('touchcancel', up, { passive: false });
+
+          h.addEventListener('mousedown', function(e) {
+            down(e.clientY, e);
+          });
+
+          window.addEventListener('mousemove', function(e) {
+            move(e.clientY, e);
+          });
+
+          window.addEventListener('mouseup', up);
+        }
+
+        function watch() {
+          document.addEventListener('click', function(e) {
+            var target = e.target && e.target.closest ? e.target.closest('.nav-pill') : null;
+            if (!target) return;
+            if (/Day\s*[1-6]/i.test(target.textContent || '')) {
+              setTimeout(function() {
+                var p = panel();
+                if (p && isDayMode()) {
+                  p.dataset.sheetReady = '';
+                }
+                prepare();
+              }, 120);
+              setTimeout(prepare, 400);
+              setTimeout(prepare, 900);
+            }
+          }, true);
+
+          window.addEventListener('resize', function() {
+            setTimeout(function() {
+              var p = panel();
+              if (p && isDayMode()) setY(p, window.innerHeight * 0.40);
+              prepare();
+            }, 120);
+          });
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function() {
+            prepare();
+            watch();
+            setTimeout(prepare, 600);
+            setTimeout(prepare, 1500);
+          });
+        } else {
+          prepare();
+          watch();
+          setTimeout(prepare, 600);
+          setTimeout(prepare, 1500);
+        }
+      })();
+    </script>
+
+
+    <script>
+      /* === Day1-6 白色行程面板：整片白色區域都可拖曳 JS === */
+      (function() {
+        var dragging = false;
+        var maybeDrag = false;
+        var startY = 0;
+        var startX = 0;
+        var startSheetY = 0;
+        var activePointerId = null;
+        var hasMoved = false;
+
+        function getApp() {
+          return document.querySelector('.app-container');
+        }
+
+        function getPanel() {
+          return document.getElementById('sidePanel');
+        }
+
+        function isMobile() {
+          return window.innerWidth <= 768;
+        }
+
+        function isDayMode() {
+          var app = getApp();
+          return isMobile() && app && !app.classList.contains('info-mode') && !document.body.classList.contains('info-mode');
+        }
+
+        function clamp(n, min, max) {
+          return Math.max(min, Math.min(max, n));
+        }
+
+        function getCurrentY(panel) {
+          var styleValue = panel.style.getPropertyValue('--day-sheet-y').trim();
+          if (styleValue) {
+            if (styleValue.indexOf('vh') > -1) return window.innerHeight * parseFloat(styleValue) / 100;
+            if (styleValue.indexOf('px') > -1) return parseFloat(styleValue);
+          }
+
+          var computedValue = getComputedStyle(panel).getPropertyValue('--day-sheet-y').trim();
+          if (computedValue) {
+            if (computedValue.indexOf('vh') > -1) return window.innerHeight * parseFloat(computedValue) / 100;
+            if (computedValue.indexOf('px') > -1) return parseFloat(computedValue);
+          }
+
+          return window.innerHeight * 0.40;
+        }
+
+        function setY(panel, yPx) {
+          var minY = 0;
+          var maxY = window.innerHeight * 0.58;
+          var y = clamp(yPx, minY, maxY);
+          panel.style.setProperty('--day-sheet-y', y + 'px');
+          panel.style.transform = 'translateY(' + y + 'px)';
+        }
+
+        function snap(panel) {
+          var y = getCurrentY(panel);
+          var vh = window.innerHeight;
+          var top = 0;
+          var mid = vh * 0.40;
+          var low = vh * 0.58;
+
+          var dTop = Math.abs(y - top);
+          var dMid = Math.abs(y - mid);
+          var dLow = Math.abs(y - low);
+
+          var target = mid;
+          if (dTop <= dMid && dTop <= dLow) target = top;
+          else if (dLow <= dTop && dLow <= dMid) target = low;
+
+          setY(panel, target);
+        }
+
+        function shouldIgnoreStart(target) {
+          if (!target || !target.closest) return false;
+
+          /* Day 行程卡本身還是可以點開 modal，所以互動元件不要拿來拖 */
+          return !!target.closest('button, a, input, textarea, select, .place-time-btn, .modal-overlay, .leaflet-container');
+        }
+
+        function prepareAnywhereDrag() {
+          var panel = getPanel();
+          var content = document.getElementById('panelContent');
+          var handle = document.getElementById('dragHandle');
+
+          if (!panel || !content || !isDayMode()) return;
+
+          panel.classList.add('day-anywhere-drag-panel');
+          panel.classList.remove('full-info-panel');
+          panel.style.display = 'flex';
+          panel.style.visibility = 'visible';
+          panel.style.opacity = '1';
+
+          /* 移除前面版本插入的多餘灰點 */
+          panel.querySelectorAll('.day-panel-handle, .day-real-drag-handle').forEach(function(el) {
+            el.style.display = 'none';
+          });
+
+          if (handle && content && handle.nextSibling !== content) {
+            panel.insertBefore(handle, content);
+          }
+
+          if (!panel.dataset.anywhereDragDefault) {
+            setY(panel, window.innerHeight * 0.40);
+            panel.dataset.anywhereDragDefault = '1';
+          }
+
+          bindPanel(panel);
+        }
+
+        function bindPanel(panel) {
+          if (panel.dataset.anywhereDragBound === '1') return;
+          panel.dataset.anywhereDragBound = '1';
+
+          panel.addEventListener('pointerdown', function(e) {
+            if (!isDayMode()) return;
+            if (shouldIgnoreStart(e.target)) return;
+
+            maybeDrag = true;
+            dragging = false;
+            hasMoved = false;
+            activePointerId = e.pointerId;
+            startX = e.clientX;
+            startY = e.clientY;
+            startSheetY = getCurrentY(panel);
+
+            try {
+              panel.setPointerCapture(e.pointerId);
+            } catch (err) {}
+          }, { passive: true });
+
+          panel.addEventListener('pointermove', function(e) {
+            if (!maybeDrag || activePointerId !== e.pointerId) return;
+
+            var dx = e.clientX - startX;
+            var dy = e.clientY - startY;
+
+            if (!dragging) {
+              if (Math.abs(dy) < 8 || Math.abs(dy) < Math.abs(dx)) return;
+              dragging = true;
+              hasMoved = true;
+              panel.classList.add('day-anywhere-dragging');
+            }
+
+            setY(panel, startSheetY + dy);
+            e.preventDefault();
+          }, { passive: false });
+
+          function end(e) {
+            if (!maybeDrag || activePointerId !== e.pointerId) return;
+
+            maybeDrag = false;
+
+            if (dragging) {
+              dragging = false;
+              panel.classList.remove('day-anywhere-dragging');
+              snap(panel);
+              e.preventDefault();
+            }
+
+            activePointerId = null;
+
+            try {
+              panel.releasePointerCapture(e.pointerId);
+            } catch (err) {}
+          }
+
+          panel.addEventListener('pointerup', end, { passive: false });
+          panel.addEventListener('pointercancel', end, { passive: false });
+
+          /* 避免拖曳後觸發卡片 click */
+          panel.addEventListener('click', function(e) {
+            if (hasMoved) {
+              e.preventDefault();
+              e.stopPropagation();
+              hasMoved = false;
+            }
+          }, true);
+        }
+
+        function resetForDayClick() {
+          var panel = getPanel();
+          if (panel && isDayMode()) {
+            panel.dataset.anywhereDragDefault = '';
+            setY(panel, window.innerHeight * 0.40);
+          }
+          prepareAnywhereDrag();
+        }
+
+        document.addEventListener('click', function(e) {
+          var btn = e.target && e.target.closest ? e.target.closest('.nav-pill') : null;
+          if (!btn) return;
+
+          if (/Day\s*[1-6]/i.test(btn.textContent || '')) {
+            setTimeout(resetForDayClick, 120);
+            setTimeout(prepareAnywhereDrag, 400);
+            setTimeout(prepareAnywhereDrag, 900);
+          }
+        }, true);
+
+        window.addEventListener('resize', function() {
+          setTimeout(function() {
+            var panel = getPanel();
+            if (panel && isDayMode()) setY(panel, window.innerHeight * 0.40);
+            prepareAnywhereDrag();
+          }, 120);
+        });
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(prepareAnywhereDrag, 300);
+            setTimeout(prepareAnywhereDrag, 1000);
+          });
+        } else {
+          setTimeout(prepareAnywhereDrag, 300);
+          setTimeout(prepareAnywhereDrag, 1000);
+        }
       })();
     </script>
 
