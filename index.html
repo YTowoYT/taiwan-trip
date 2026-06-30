@@ -5463,6 +5463,94 @@
       }
     }
 
+
+    /* === 留言板底部輸入列：實際 ID 精準一直線修正 === */
+    body.info-mode #panelContent .chat-container > .chat-input-area,
+    body .app-container.info-mode #panelContent .chat-container > .chat-input-area {
+      display: grid !important;
+      grid-template-columns: 92px minmax(0, 1fr) 54px !important;
+      gap: 8px !important;
+      align-items: center !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      border-top: 2px dashed #e2e8f0 !important;
+      padding-top: 16px !important;
+      padding-bottom: env(safe-area-inset-bottom) !important;
+      flex-shrink: 0 !important;
+    }
+
+    body.info-mode #panelContent .chat-container > .chat-input-area #nameInput,
+    body .app-container.info-mode #panelContent .chat-container > .chat-input-area #nameInput {
+      grid-column: 1 !important;
+      grid-row: 1 !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      height: 50px !important;
+      margin: 0 !important;
+      padding: 0 10px !important;
+      border-radius: 999px !important;
+      text-align: center !important;
+      box-sizing: border-box !important;
+    }
+
+    body.info-mode #panelContent .chat-container > .chat-input-area #msgInput,
+    body .app-container.info-mode #panelContent .chat-container > .chat-input-area #msgInput {
+      grid-column: 2 !important;
+      grid-row: 1 !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      height: 50px !important;
+      margin: 0 !important;
+      padding: 0 16px !important;
+      border-radius: 999px !important;
+      box-sizing: border-box !important;
+      flex-grow: 0 !important;
+    }
+
+    body.info-mode #panelContent .chat-container > .chat-input-area #sendBtn,
+    body .app-container.info-mode #panelContent .chat-container > .chat-input-area #sendBtn {
+      grid-column: 3 !important;
+      grid-row: 1 !important;
+      width: 54px !important;
+      min-width: 54px !important;
+      height: 54px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      align-self: center !important;
+      justify-self: end !important;
+      position: static !important;
+      transform: none !important;
+      box-sizing: border-box !important;
+      flex-shrink: 0 !important;
+    }
+
+    @media (max-width: 390px) {
+      body.info-mode #panelContent .chat-container > .chat-input-area,
+      body .app-container.info-mode #panelContent .chat-container > .chat-input-area {
+        grid-template-columns: 78px minmax(0, 1fr) 50px !important;
+        gap: 7px !important;
+      }
+
+      body.info-mode #panelContent .chat-container > .chat-input-area #nameInput,
+      body.info-mode #panelContent .chat-container > .chat-input-area #msgInput,
+      body .app-container.info-mode #panelContent .chat-container > .chat-input-area #nameInput,
+      body .app-container.info-mode #panelContent .chat-container > .chat-input-area #msgInput {
+        height: 48px !important;
+      }
+
+      body.info-mode #panelContent .chat-container > .chat-input-area #sendBtn,
+      body .app-container.info-mode #panelContent .chat-container > .chat-input-area #sendBtn {
+        width: 50px !important;
+        min-width: 50px !important;
+        height: 50px !important;
+      }
+    }
+
 </style>
 </head>
 
@@ -5732,13 +5820,13 @@
       3: {
         date: "2026/07/05 (日)",
         title: "墾丁 ➔ 車城展覽 ➔ 高雄",
-        desc: "第三天睡到飽，11 點退房後先到車城 LSF Arts 看展，中午吃茶壺雞，再前往高雄壽山動物園、龍虎塔、劉家酸菜白肉鍋，最後入住高雄圓山。",
+        desc: "第三天睡到飽退房後先到車城 LSF Arts 周邊拍照與短暫散步，中午吃茶壺雞，再前往高雄壽山動物園、龍虎塔、劉家酸菜白肉鍋，最後入住高雄圓山。",
         sections: [
           {
             label: "Morning",
             places: [
               {
-                time: "11:00",
+                time: "10:45",
                 name: "墾丁怡灣渡假酒店",
                 rating: "4.3 ★",
                 desc: "睡到飽後退房出發，今天取消海生館，改成輕鬆往高雄移動。",
@@ -5748,10 +5836,10 @@
               },
               {
                 driveTime: "約 25 分鐘",
-                time: "11:30",
+                time: "11:15",
                 name: "LSF Arts 美術館／展覽",
                 rating: "4.5 ★",
-                desc: "位於屏東車城海口村的展覽空間，地址：屏東縣車城鄉海口村海口路 1-12 號。從墾丁北上高雄前順路停留。",
+                desc: "位於屏東車城海口村的展覽空間，地址：屏東縣車城鄉海口村海口路 1-12 號。預抓約 1 小時，周邊拍照與短暫散步後再前往午餐。",
                 img: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=400&q=80",
                 lat: 22.0879,
                 lng: 120.7055
@@ -5763,7 +5851,7 @@
             places: [
               {
                 driveTime: "約 35 分鐘",
-                time: "12:30",
+                time: "12:50",
                 name: "關子嶺茶壺雞加祿分店",
                 rating: "4.3 ★",
                 desc: "午餐安排茶壺雞，位於屏東加祿一帶，剛好在車城往高雄方向的路線上，順路不繞。",
@@ -5849,18 +5937,8 @@
             label: "Afternoon",
             places: [
               {
-                driveTime: "約 45 分鐘",
-                time: "13:00",
-                name: "國立臺灣歷史博物館",
-                rating: "4.6 ★",
-                desc: "抵達台南，超大室內展館與絕美打卡建築。",
-                img: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=400&q=80",
-                lat: 23.0592,
-                lng: 120.2078
-              },
-              {
                 driveTime: "約 25 分鐘",
-                time: "15:00",
+                time: "12:30",
                 name: "安平古堡",
                 rating: "4.4 ★",
                 desc: "台灣最古老紅磚城堡，漫步安平老街。",
@@ -5870,7 +5948,7 @@
               },
               {
                 driveTime: "約 10 分鐘",
-                time: "16:30",
+                time: "14:00",
                 name: "安平定情碼頭德陽艦園區",
                 rating: "4.5 ★",
                 desc: "全台唯一軍艦博物館，帥氣打卡。",
@@ -5880,7 +5958,7 @@
               },
               {
                 driveTime: "約 10 分鐘",
-                time: "17:30",
+                time: "15:30",
                 name: "漁光島",
                 rating: "4.5 ★",
                 desc: "絕美沙灘，欣賞浪漫夕陽海景。",
@@ -5916,7 +5994,7 @@
       5: {
         date: "2026/07/07 (二)",
         title: "台南 ➔ 南投 ➔ 彰化 ➔ 台中",
-        desc: "早餐從缺，北上紫南宮祈福，中餐路邊吃雞，下午百果山，晚上入住浮雲客棧與激旨燒鳥。",
+        desc: "早餐從缺，北上紫南宮祈福，中餐改至燒瓶子員林店，下午百果山，晚上入住浮雲客棧與激旨燒鳥。",
         sections: [
           {
             label: "Morning",
@@ -5941,14 +6019,14 @@
                 lng: 120.7303
               },
               {
-                driveTime: "約 15 分鐘",
-                time: "12:00",
-                name: "路邊吃雞",
-                rating: "4.3 ★",
-                desc: "紫南宮附近午餐，先暫定路邊吃雞，之後可再替換成指定餐廳名稱。",
+                driveTime: "約 55 分鐘",
+                time: "12:30",
+                name: "燒瓶子。大肆の鍋 員林店",
+                rating: "4.8 ★",
+                desc: "午餐改至燒瓶子員林店，地址：510彰化縣員林市三多里大同路二段266號。",
                 img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80",
-                lat: 23.7595,
-                lng: 120.6904
+                lat: 23.9668,
+                lng: 120.5788
               }
             ]
           },
@@ -5956,8 +6034,8 @@
             label: "Afternoon",
             places: [
               {
-                driveTime: "約 1 小時",
-                time: "14:30",
+                driveTime: "約 15 分鐘",
+                time: "15:00",
                 name: "百果山",
                 rating: "4.2 ★",
                 desc: "彰化員林附近的經典景點，可走走拍照、吃點小吃，作為台南到台中的中繼點。",
@@ -5992,8 +6070,8 @@
 
       6: {
         date: "2026/07/08 (三)",
-        title: "台中 ➔ 台北松山",
-        desc: "返程平安到家，維持原本台中回台北路線。",
+        title: "台中 ➔ LaLaport ➔ 台北松山",
+        desc: "返程先到科博館，再到 LaLaport 台中午餐與短暫逛街，下午出發回台北松山。",
         sections: [
           {
             label: "Morning",
@@ -6023,8 +6101,18 @@
             label: "Afternoon",
             places: [
               {
-                driveTime: "約 2.5 小時",
-                time: "14:30",
+                driveTime: "約 20 分鐘",
+                time: "12:30",
+                name: "Mitsui Shopping Park LaLaport 台中",
+                rating: "4.4 ★",
+                desc: "午餐與短暫逛街休息，地址：40154 台中市東區進德路600號。",
+                img: "https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=400&q=80",
+                lat: 24.1366,
+                lng: 120.6926
+              },
+              {
+                driveTime: "約 2.5～3 小時",
+                time: "18:00",
                 name: "台北松山車站",
                 rating: "5.0 ★",
                 desc: "滿載美好的南台灣旅行回憶，平安到家。",
@@ -6137,8 +6225,10 @@
         mapUrl = 'ht' + 'tps://ww' + 'w.goo' + 'gle.com/ma' + 'ps/search/?api=1&query=' + encodeURIComponent("捉鳳凰百年老宅 台南");
       } else if (name.indexOf("墾丁怡灣") !== -1) {
         mapUrl = 'ht' + 'tps://ww' + 'w.goo' + 'gle.com/ma' + 'ps/search/?api=1&query=' + encodeURIComponent("墾丁怡灣渡假酒店");
-      } else if (name === "路邊吃雞") {
-        mapUrl = 'ht' + 'tps://ww' + 'w.goo' + 'gle.com/ma' + 'ps/search/?api=1&query=' + encodeURIComponent("竹山 路邊吃雞");
+      } else if (name === "燒瓶子。大肆の鍋 員林店") {
+        mapUrl = 'ht' + 'tps://ww' + 'w.goo' + 'gle.com/ma' + 'ps/search/?api=1&query=' + encodeURIComponent("510彰化縣員林市三多里大同路二段266號 燒瓶子。大肆の鍋 員林店");
+      } else if (name === "Mitsui Shopping Park LaLaport 台中") {
+        mapUrl = 'ht' + 'tps://ww' + 'w.goo' + 'gle.com/ma' + 'ps/search/?api=1&query=' + encodeURIComponent("40154 台中市東區進德路600號 Mitsui Shopping Park LaLaport 台中");
       } else if (name === "後壁湖午餐") {
         mapUrl = 'ht' + 'tps://ww' + 'w.goo' + 'gle.com/ma' + 'ps/search/?api=1&query=' + encodeURIComponent("後壁湖 海鮮 午餐");
       } else if (name.indexOf("LSF Arts") !== -1) {
@@ -6378,7 +6468,7 @@
       window.currentViewDay = day;
       var data = itineraryData[day];
 
-      var html = '<div class="day-label">DAY ' + day + ' <span class="day-date">' + data.date + '</span></div><h1 class="route-title">' + data.title + '</h1><p class="route-desc">' + data.desc + '</p>';
+      var html = '<div class="day-label">DAY ' + day + ' <span class="day-date">' + data.date + '</span></div><h1 class="route-title">' + data.title + '</h1><p class="route-desc">' + data.desc + '</p><div id="todayFoodArea"></div>';
       var coords = [];
 
       clearMap();
@@ -6426,7 +6516,7 @@
         html += '</div>';
       });
 
-      document.getElementById('panelContent').innerHTML = html + '<div id="todayFoodArea"></div>';
+      document.getElementById('panelContent').innerHTML = html;
       renderTodayFoodSummary(day);
 
       if (coords.length > 1) {
@@ -6938,12 +7028,12 @@
             '<label class="acc-jp-input-row">每人 <input type="number" id="fundInput" onchange="window.updateFundSettings(\'perPerson\', this.value)" ' + disabledAttr + '></label>' +
           '</div>' +
           '<div id="tripFundCard" class="acc-jp-card trip">' +
-            '<div class="acc-jp-title">👀 行程公積金</div>' +
+            '<div class="acc-jp-title">🍱 行程公積金</div>' +
             '<div id="tripFundTotal" class="acc-jp-value">$0</div>' +
             '<div id="tripFundRemain" class="acc-jp-sub acc-jp-remain good">目前剩餘 $0</div>' +
           '</div>' +
           '<div class="acc-jp-card advance">' +
-            '<div class="acc-jp-title">⭐️ 已先代墊</div>' +
+            '<div class="acc-jp-title">🏨 已先代墊</div>' +
             '<div id="advanceTotalBox" class="acc-jp-value">$0</div>' +
             '<div class="acc-jp-sub">住宿、訂金、行前已付</div>' +
           '</div>' +
