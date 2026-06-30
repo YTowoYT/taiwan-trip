@@ -5551,6 +5551,145 @@
       }
     }
 
+
+    /* === 行程卡片：預計停留時間小註記 === */
+    .place-stay-note {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+      margin-left: 6px !important;
+      padding: 3px 8px !important;
+      border-radius: 999px !important;
+      background: rgba(226, 232, 240, 0.72) !important;
+      color: #64748b !important;
+      font-size: 11px !important;
+      font-weight: 850 !important;
+      line-height: 1.2 !important;
+      vertical-align: middle !important;
+      white-space: nowrap !important;
+    }
+
+    @media (max-width: 768px) {
+      .place-stay-note {
+        display: flex !important;
+        width: fit-content !important;
+        margin: 6px 0 0 0 !important;
+        font-size: 10.5px !important;
+        padding: 3px 8px !important;
+      }
+    }
+
+
+    /* === 行程卡片：停留時間固定在地名下方 === */
+    .place-name {
+      display: block !important;
+      line-height: 1.28 !important;
+    }
+
+    .place-name .place-stay-note {
+      display: flex !important;
+      width: fit-content !important;
+      margin: 7px 0 0 0 !important;
+      padding: 4px 9px !important;
+      border-radius: 999px !important;
+      background: rgba(226, 232, 240, 0.82) !important;
+      color: #64748b !important;
+      font-size: 11px !important;
+      font-weight: 850 !important;
+      line-height: 1.15 !important;
+      white-space: nowrap !important;
+      vertical-align: initial !important;
+    }
+
+    @media (max-width: 768px) {
+      .place-name .place-stay-note {
+        margin-top: 7px !important;
+        font-size: 10.5px !important;
+        padding: 4px 9px !important;
+      }
+    }
+
+
+    /* === 行程卡片：停留時間接在景點名稱後方 === */
+    .place-name {
+      display: block !important;
+      line-height: 1.28 !important;
+    }
+
+    .place-name .place-stay-note {
+      display: inline-flex !important;
+      width: auto !important;
+      max-width: max-content !important;
+      margin: 0 0 0 8px !important;
+      padding: 4px 9px !important;
+      border-radius: 999px !important;
+      background: rgba(226, 232, 240, 0.82) !important;
+      color: #64748b !important;
+      font-size: 11px !important;
+      font-weight: 850 !important;
+      line-height: 1.15 !important;
+      white-space: nowrap !important;
+      vertical-align: middle !important;
+      transform: translateY(-1px) !important;
+    }
+
+    @media (max-width: 768px) {
+      .place-name .place-stay-note {
+        display: inline-flex !important;
+        width: auto !important;
+        margin: 0 0 0 7px !important;
+        font-size: 10.5px !important;
+        padding: 4px 9px !important;
+        vertical-align: middle !important;
+      }
+    }
+
+
+    /* === 行程卡片：停留時間換行時與景點名稱左側對齊 === */
+    .place-name {
+      display: block !important;
+      line-height: 1.28 !important;
+      text-align: left !important;
+    }
+
+    .place-name .place-stay-note {
+      display: inline-flex !important;
+      width: auto !important;
+      max-width: max-content !important;
+      margin: 0 0 0 8px !important;
+      padding: 4px 9px !important;
+      border-radius: 999px !important;
+      background: rgba(226, 232, 240, 0.82) !important;
+      color: #64748b !important;
+      font-size: 11px !important;
+      font-weight: 850 !important;
+      line-height: 1.15 !important;
+      white-space: nowrap !important;
+      vertical-align: middle !important;
+      transform: translateY(-1px) !important;
+    }
+
+    @media (max-width: 768px) {
+      .place-name {
+        display: block !important;
+        text-align: left !important;
+      }
+
+      .place-name .place-stay-note {
+        display: inline-flex !important;
+        width: auto !important;
+        margin-left: 7px !important;
+        font-size: 10.5px !important;
+        padding: 4px 9px !important;
+        vertical-align: middle !important;
+      }
+
+      /* 空間不足時，停留標籤可自然掉到下一排，且從標題左側開始 */
+      .place-name .place-stay-note {
+        margin-top: 5px !important;
+      }
+    }
+
 </style>
 </head>
 
@@ -6045,7 +6184,7 @@
               },
               {
                 driveTime: "約 45 分鐘",
-                time: "17:00",
+                time: "19:00",
                 name: "浮雲客棧",
                 rating: "4.4 ★",
                 desc: "抵達西屯的浮雲客棧辦理 check in，放下行李整理一下。",
@@ -6055,7 +6194,7 @@
               },
               {
                 driveTime: "步行約 10 分鐘",
-                time: "18:30",
+                time: "20:00",
                 name: "激旨燒鳥",
                 rating: "4.5 ★",
                 desc: "逢甲夜市最強露天串燒居酒屋，聽駐唱吃烤肉。",
@@ -6463,6 +6602,70 @@
         .replace(/\r/g, " ");
     }
 
+
+    function parseStayDriveMinutes(text) {
+      if (!text) return 0;
+      var total = 0;
+      var str = String(text);
+      var hourMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:小時|hr|hour)/i);
+      var minMatch = str.match(/(\d+)\s*(?:分鐘|min|minute)/i);
+      if (hourMatch) total += Math.round(parseFloat(hourMatch[1]) * 60);
+      if (minMatch) total += parseInt(minMatch[1], 10);
+      return total;
+    }
+
+    function parseStayTimeToMinutes(t) {
+      if (!t) return null;
+      var m = String(t).match(/(\d{1,2}):(\d{2})/);
+      if (!m) return null;
+      return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    }
+
+    function formatStayMinutes(mins) {
+      if (mins == null || isNaN(mins)) return "彈性停留";
+      if (mins <= 0) return "短暫停留";
+      var h = Math.floor(mins / 60);
+      var m = mins % 60;
+      if (h > 0 && m > 0) return "約 " + h + " 小時 " + m + " 分";
+      if (h > 0) return "約 " + h + " 小時";
+      return "約 " + m + " 分鐘";
+    }
+
+    function getEstimatedStayText(day, sectionIndex, placeIndex) {
+      try {
+        var data = itineraryData[day];
+        if (!data || !data.sections || !data.sections[sectionIndex]) return "彈性停留";
+
+        var flat = [];
+        data.sections.forEach(function(sec, sIdx) {
+          (sec.places || []).forEach(function(place, pIdx) {
+            flat.push({ sectionIndex: sIdx, placeIndex: pIdx, place: place });
+          });
+        });
+
+        var idx = flat.findIndex(function(item) {
+          return item.sectionIndex === sectionIndex && item.placeIndex === placeIndex;
+        });
+
+        if (idx < 0 || idx >= flat.length - 1) return "彈性停留";
+
+        var current = flat[idx].place;
+        var next = flat[idx + 1].place;
+
+        var currentMin = parseStayTimeToMinutes(current.time);
+        var nextMin = parseStayTimeToMinutes(next.time);
+        if (currentMin == null || nextMin == null) return "彈性停留";
+        if (nextMin < currentMin) nextMin += 24 * 60;
+
+        var driveMin = parseStayDriveMinutes(next.driveTime || "");
+        var stayMin = nextMin - currentMin - driveMin;
+
+        return formatStayMinutes(stayMin);
+      } catch (err) {
+        return "彈性停留";
+      }
+    }
+
     function renderDay(day) {
       setMapMode();
       window.currentViewDay = day;
@@ -6495,7 +6698,7 @@
                 '<div class="place-time-btn" onclick="window.changeTime(' + day + ', ' + sIdx + ', ' + pIdx + ', \'' + p.time + '\'); event.stopPropagation();" title="點擊推算後續時間">' +
                   '<i class="fa-solid fa-pen"></i> ' + p.time +
                 '</div>' +
-                '<h3 class="place-name">' + p.name + '</h3>' +
+                '<h3 class="place-name">' + p.name + '<span class="place-stay-note">⏱ ' + getEstimatedStayText(day, sIdx, pIdx) + '</span></h3>' +
                 '<div class="place-rating">' + p.rating + '</div>' +
                 '<div class="place-desc">' + p.desc + '</div>' +
               '</div>' +
@@ -8192,6 +8395,61 @@
           setTimeout(prepareAnywhereDrag, 300);
           setTimeout(prepareAnywhereDrag, 1000);
         }
+      })();
+    </script>
+
+
+    <script>
+      /* === 停留時間標籤：換行時左對齊景點名稱 === */
+      (function() {
+        function alignStayNotes() {
+          document.querySelectorAll('.place-name .place-stay-note').forEach(function(note) {
+            var title = note.parentElement;
+            if (!title) return;
+
+            note.classList.remove('stay-note-break');
+
+            var titleRect = title.getBoundingClientRect();
+            var noteRect = note.getBoundingClientRect();
+
+            /*
+              如果標籤被擠到下一行，note 的 left 會接近 title 左側；
+              如果仍在同一行，維持接在名稱後方。
+              這裡用 offsetTop 判斷是否已經換行。
+            */
+            if (note.offsetTop > 8) {
+              note.classList.add('stay-note-break');
+            }
+          });
+        }
+
+        var css = document.createElement('style');
+        css.textContent = `
+          .place-name .place-stay-note.stay-note-break {
+            display: flex !important;
+            width: fit-content !important;
+            margin-left: 0 !important;
+            margin-top: 7px !important;
+            transform: none !important;
+          }
+        `;
+        document.head.appendChild(css);
+
+        document.addEventListener('DOMContentLoaded', function() {
+          setTimeout(alignStayNotes, 100);
+          setTimeout(alignStayNotes, 600);
+        });
+
+        document.addEventListener('click', function(e) {
+          if (e.target && e.target.closest && e.target.closest('.nav-pill')) {
+            setTimeout(alignStayNotes, 120);
+            setTimeout(alignStayNotes, 500);
+          }
+        }, true);
+
+        window.addEventListener('resize', function() {
+          setTimeout(alignStayNotes, 120);
+        });
       })();
     </script>
 
