@@ -5690,6 +5690,48 @@
       }
     }
 
+
+    /* === 想吃清單：自動路線建議測試版 === */
+    .food-auto-suggest,
+    .today-food-auto-suggest {
+      margin-top: 8px !important;
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 6px !important;
+      color: #64748b !important;
+      font-size: 13px !important;
+      font-weight: 850 !important;
+      line-height: 1.45 !important;
+    }
+
+    .food-auto-suggest-label,
+    .today-food-auto-suggest-label {
+      color: #0f766e !important;
+      font-weight: 1000 !important;
+      white-space: nowrap !important;
+    }
+
+    .food-auto-suggest-text,
+    .today-food-auto-suggest-text {
+      color: #64748b !important;
+      font-weight: 850 !important;
+    }
+
+    .food-form-box .food-field-label {
+      display: block !important;
+      margin: 8px 0 5px !important;
+      color: #8b7a68 !important;
+      font-size: 12px !important;
+      font-weight: 1000 !important;
+    }
+
+    @media (max-width: 768px) {
+      .food-auto-suggest,
+      .today-food-auto-suggest {
+        font-size: 12.5px !important;
+      }
+    }
+
 </style>
 </head>
 
@@ -6978,6 +7020,50 @@
       return 'Day ' + day;
     }
 
+
+    function getFoodAutoSuggestion(food) {
+      var name = ((food && food.name) ? food.name : '').toLowerCase();
+      var originalName = (food && food.name) ? food.name : '';
+      var day = String((food && food.day) ? food.day : 'any');
+
+      if (/miu|日式刨冰|刨冰|恆春日式/.test(name) || /MIU|刨冰|恆春日式/.test(originalName)) {
+        return '建議下午或傍晚，小巴里島岩結束後、回墾丁大街前後順路；想吃冰休息很適合。';
+      }
+
+      if (/艸野人|岬野人|綠豆沙|綠豆沙牛奶/.test(originalName)) {
+        return '建議後段安排，墾丁大街前後或回恆春路上外帶，適合當下午飲料休息點。';
+      }
+
+      if (/正記|黃家|綠豆蒜|車城/.test(originalName)) {
+        return '建議 LSF Arts 周邊拍照後順路去，吃完再接關子嶺茶壺雞；不要排到高雄後再回頭。';
+      }
+
+      if (/亞發師|阿發師/.test(originalName)) {
+        return '建議晚餐或宵夜，逛墾丁大街前後最順，吃完可直接回飯店。';
+      }
+
+      if (/後壁湖|海鮮|阿興|生魚片/.test(originalName)) {
+        return '建議午餐，小巴里島岩或白砂灣前後順路；不要排太晚，避免後面行程被壓縮。';
+      }
+
+      if (/燒瓶子|員林/.test(originalName)) {
+        return '建議午餐，紫南宮結束後往員林方向吃，再接百果山，不需要折返。';
+      }
+
+      if (/lalaport|la laport|三井/.test(name) || /LaLaport|三井/.test(originalName)) {
+        return '建議午餐與短暫逛街，科博館結束後過去，再直接北上回台北。';
+      }
+
+      if (day === '1') return '建議安排在順路點前後，優先放在東港午餐或飯店入住前後，避免抵達墾丁後再折返。';
+      if (day === '2') return '建議安排在墾丁半島路線中段或墾丁大街前後，依店家位置放在最近景點旁。';
+      if (day === '3') return '建議安排在車城／高雄移動路線上，優先放在 LSF Arts 後或進高雄前。';
+      if (day === '4') return '建議安排在安平、漁光島、大東・永大夜市周邊，避免離開台南市區後折返。';
+      if (day === '5') return '建議安排在紫南宮、員林、百果山到台中這條線上，盡量放午餐或下午茶。';
+      if (day === '6') return '建議安排在科博館或 LaLaport 周邊，吃完再北上最順。';
+
+      return '尚無自動建議；需要先確認店家位置，才好判斷放在哪個景點前後最順。';
+    }
+
     function getFoodVotesCount(votes) {
       return votes ? Object.keys(votes).filter(function(k) { return votes[k]; }).length : 0;
     }
@@ -7038,6 +7124,10 @@
           '<div>' +
             '<div class="food-wish-title"><a class="food-name-link" href="' + escapeHtml(getFoodMapUrl(food)) + '" target="_blank">' + escapeHtml(food.name || '未命名美食') + '</a></div>' +
             '<div class="food-wish-meta">新增人：' + escapeHtml(food.user || '旅伴') + '　❤️ ' + votes + ' 人想吃</div>' +
+            '<div class="food-auto-suggest">' +
+              '<span class="food-auto-suggest-label">📍 建議：</span>' +
+              '<span class="food-auto-suggest-text">' + escapeHtml(getFoodAutoSuggestion(food)) + '</span>' +
+            '</div>' +
           '</div>' +
           '<div class="food-wish-actions">' +
             '<button class="food-vote-btn ' + (alreadyVoted ? 'voted' : '') + '" onclick="window.toggleFoodVote(\'' + safeId + '\', ' + alreadyVoted + ')">' + (alreadyVoted ? '❤️ 已想吃' : '♡ 想吃') + '</button>' +
@@ -7066,6 +7156,7 @@
           '</div>' +
           '<div class="food-form-box">' +
             '<div class="food-form-title">新增想吃</div>' +
+            '<label class="food-field-label">顯示在哪一天</label>' +
             '<select id="foodDayInput" ' + disabledAttr + '>' +
               '<option value="1">Day 1</option>' +
               '<option value="2">Day 2</option>' +
@@ -7075,7 +7166,8 @@
               '<option value="6">Day 6</option>' +
               '<option value="any">不限</option>' +
             '</select>' +
-            '<input type="text" id="foodNameInput" placeholder="店名／想吃的東西，例如：阿興生魚片" ' + disabledAttr + '>' +
+            '<label class="food-field-label">店名 / 想吃項目</label>' +
+            '<input type="text" id="foodNameInput" placeholder="例如：MIU MIU 恆春日式刨冰、正記黃家綠豆蒜" ' + disabledAttr + '>' +
             '<button class="food-add-btn" id="addFoodBtn" ' + disabledAttr + '>＋ 新增想吃</button>' +
             (!myName ? '<div class="food-name-hint">請先點右上角設定名字，才可以新增與投票。</div>' : '') +
           '</div>' +
@@ -7204,6 +7296,10 @@
               '<div>' +
                 '<div class="today-food-name"><a class="today-food-name-link" href="' + escapeHtml(getFoodMapUrl(food)) + '" target="_blank">' + escapeHtml(food.name || '未命名美食') + '</a></div>' +
                 '<div class="today-food-vote">❤️ ' + getFoodVotesCount(food.votes) + ' 人想吃</div>' +
+                '<div class="today-food-auto-suggest">' +
+                  '<span class="today-food-auto-suggest-label">📍 建議：</span>' +
+                  '<span class="today-food-auto-suggest-text">' + escapeHtml(getFoodAutoSuggestion(food)) + '</span>' +
+                '</div>' +
               '</div>' +
             '</div>';
         });
