@@ -6647,7 +6647,8 @@
           return item.sectionIndex === sectionIndex && item.placeIndex === placeIndex;
         });
 
-        if (idx < 0 || idx >= flat.length - 1) return "彈性停留";
+        /* 每日第一個與最後一個行程不顯示停留時間 */
+        if (idx <= 0 || idx >= flat.length - 1) return "";
 
         var current = flat[idx].place;
         var next = flat[idx + 1].place;
@@ -6698,7 +6699,7 @@
                 '<div class="place-time-btn" onclick="window.changeTime(' + day + ', ' + sIdx + ', ' + pIdx + ', \'' + p.time + '\'); event.stopPropagation();" title="點擊推算後續時間">' +
                   '<i class="fa-solid fa-pen"></i> ' + p.time +
                 '</div>' +
-                '<h3 class="place-name">' + p.name + '<span class="place-stay-note">⏱ ' + getEstimatedStayText(day, sIdx, pIdx) + '</span></h3>' +
+                '<h3 class="place-name">' + p.name + (getEstimatedStayText(day, sIdx, pIdx) ? '<span class="place-stay-note">⏱ ' + getEstimatedStayText(day, sIdx, pIdx) + '</span>' : '') + '</h3>' +
                 '<div class="place-rating">' + p.rating + '</div>' +
                 '<div class="place-desc">' + p.desc + '</div>' +
               '</div>' +
